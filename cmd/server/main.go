@@ -19,7 +19,7 @@ func main() {
 	}
 
 	// 2. Initialize application (DI, Router, DB)
-	application, err := app.NewApp(cfg)
+	application, err := app.InitializeApp(cfg)
 	if err != nil {
 		log.Fatalf("[Main] Failed to initialize app: %v", err)
 	}

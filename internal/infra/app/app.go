@@ -21,51 +21,34 @@ import (
 	// Automation
 	automationDomain "github.com/vothanh/crm-platform/internal/modules/automation/domain"
 	automationHandler "github.com/vothanh/crm-platform/internal/modules/automation/handler"
-	automationRepo "github.com/vothanh/crm-platform/internal/modules/automation/repository"
-	automationService "github.com/vothanh/crm-platform/internal/modules/automation/service"
 
 	// Campaign
 	campaignDomain "github.com/vothanh/crm-platform/internal/modules/campaign/domain"
 	campaignHandler "github.com/vothanh/crm-platform/internal/modules/campaign/handler"
-	campaignRepo "github.com/vothanh/crm-platform/internal/modules/campaign/repository"
-	campaignService "github.com/vothanh/crm-platform/internal/modules/campaign/service"
 
 	// Customer
 	customerDomain "github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	customerHandler "github.com/vothanh/crm-platform/internal/modules/customer/handler"
-	customerRepo "github.com/vothanh/crm-platform/internal/modules/customer/repository"
-	customerService "github.com/vothanh/crm-platform/internal/modules/customer/service"
 
 	// Ingestion
 	ingestionDomain "github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
 	ingestionHandler "github.com/vothanh/crm-platform/internal/modules/ingestion/handler"
-	ingestionRepo "github.com/vothanh/crm-platform/internal/modules/ingestion/repository"
-	ingestionService "github.com/vothanh/crm-platform/internal/modules/ingestion/service"
 
 	// Notification
 	notificationDomain "github.com/vothanh/crm-platform/internal/modules/notification/domain"
 	notificationHandler "github.com/vothanh/crm-platform/internal/modules/notification/handler"
-	notificationProvider "github.com/vothanh/crm-platform/internal/modules/notification/provider"
-	notificationRepo "github.com/vothanh/crm-platform/internal/modules/notification/repository"
-	notificationService "github.com/vothanh/crm-platform/internal/modules/notification/service"
 
 	// Segmentation
 	segmentationDomain "github.com/vothanh/crm-platform/internal/modules/segmentation/domain"
 	segmentationHandler "github.com/vothanh/crm-platform/internal/modules/segmentation/handler"
-	segmentationRepo "github.com/vothanh/crm-platform/internal/modules/segmentation/repository"
-	segmentationService "github.com/vothanh/crm-platform/internal/modules/segmentation/service"
 
 	// Tenant
 	tenantDomain "github.com/vothanh/crm-platform/internal/modules/tenant/domain"
 	tenantHandler "github.com/vothanh/crm-platform/internal/modules/tenant/handler"
-	tenantRepo "github.com/vothanh/crm-platform/internal/modules/tenant/repository"
-	tenantService "github.com/vothanh/crm-platform/internal/modules/tenant/service"
 
 	// Trip
 	tripDomain "github.com/vothanh/crm-platform/internal/modules/trip/domain"
 	tripHandler "github.com/vothanh/crm-platform/internal/modules/trip/handler"
-	tripRepo "github.com/vothanh/crm-platform/internal/modules/trip/repository"
-	tripService "github.com/vothanh/crm-platform/internal/modules/trip/service"
 
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
 )
@@ -78,13 +61,21 @@ type App struct {
 	server *http.Server
 }
 
-// NewApp initializes dependencies, connects to the database, and sets up routing.
-func NewApp(cfg *config.Config) (*App, error) {
-	// Connect to database
-	db, err := database.NewPostgresDB(cfg.Database.DSN())
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect database: %w", err)
-	}
+// NewAppWithDependencies creates a new App struct with all handlers injected.
+// This is called by Google Wire after it has instantiated all dependencies.
+func NewAppWithDependencies(
+	cfg *config.Config,
+	db *gorm.DB,
+	tenantH *tenantHandler.TenantHandler,
+	customerH *customerHandler.CustomerHandler,
+	tripH *tripHandler.TripHandler,
+	ingestionH *ingestionHandler.IngestionHandler,
+	segmentationH *segmentationHandler.SegmentationHandler,
+	campaignH *campaignHandler.CampaignHandler,
+	automationH *automationHandler.AutomationHandler,
+	notificationH *notificationHandler.NotificationHandler,
+	analyticsH *analyticsHandler.AnalyticsHandler,
+) (*App, error) {
 
 	app := &App{
 		cfg: cfg,
@@ -95,7 +86,37 @@ func NewApp(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
 	}
 
-	app.setupRouter()
+	app.router = gin.Default()
+	app.router.Use(middleware.CORS())
+	app.router.Use(middleware.Logger())
+
+	// Health check
+	app.router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	api := app.router.Group("/api/v1")
+
+	// Admin routes
+	tenantH.RegisterRoutes(api)
+
+	// Protected routes (API key required)
+	apiKeyCache := middleware.NewAPIKeyCache()
+	protected := api.Group("")
+	protected.Use(middleware.APIKeyAuth(app.db, apiKeyCache))
+	{
+		ingestionH.RegisterRoutes(protected)
+		customerH.RegisterRoutes(protected)
+		tripH.RegisterRoutes(protected)
+		segmentationH.RegisterRoutes(protected)
+		campaignH.RegisterRoutes(protected)
+		automationH.RegisterRoutes(protected)
+		notificationH.RegisterRoutes(protected)
+		analyticsH.RegisterRoutes(protected)
+	}
+
+	log.Printf("[Server] Modules loaded via Wire: tenant, customer, trip, ingestion, segmentation, campaign, automation, notification, analytics")
+
 	return app, nil
 }
 
@@ -161,89 +182,4 @@ func (a *App) migrate() error {
 		&automationDomain.AutomationLog{},
 		&notificationDomain.Notification{},
 	)
-}
-
-func (a *App) setupRouter() {
-	a.router = gin.Default()
-	a.router.Use(middleware.CORS())
-	a.router.Use(middleware.Logger())
-
-	// Health check
-	a.router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-
-	v1 := a.router.Group("/api/v1")
-	a.setupModules(v1)
-}
-
-func (a *App) setupModules(api *gin.RouterGroup) {
-	// Initialize Repositories
-	tenantRepository := tenantRepo.NewTenantPostgresRepo(a.db)
-	apiKeyRepository := tenantRepo.NewAPIKeyPostgresRepo(a.db)
-	customerRepository := customerRepo.NewCustomerPostgresRepo(a.db)
-	eventRepository := ingestionRepo.NewEventPostgresRepo(a.db)
-	tripRepository := tripRepo.NewTripPostgresRepo(a.db)
-	segmentRepository := segmentationRepo.NewSegmentPostgresRepo(a.db)
-	customerSegmentRepository := segmentationRepo.NewCustomerSegmentPostgresRepo(a.db)
-	campaignRepository := campaignRepo.NewCampaignPostgresRepo(a.db)
-	voucherRepository := campaignRepo.NewVoucherPostgresRepo(a.db)
-	voucherUsageRepository := campaignRepo.NewVoucherUsagePostgresRepo(a.db)
-	automationRuleRepository := automationRepo.NewAutomationRulePostgresRepo(a.db)
-	automationLogRepository := automationRepo.NewAutomationLogPostgresRepo(a.db)
-	notificationRepository := notificationRepo.NewNotificationPostgresRepo(a.db)
-
-	// Initialize Services
-	tenantSvc := tenantService.NewTenantService(tenantRepository, apiKeyRepository)
-	customerSvc := customerService.NewCustomerService(customerRepository)
-	tripSvc := tripService.NewTripService(tripRepository)
-	segmentationSvc := segmentationService.NewSegmentationService(segmentRepository, customerSegmentRepository)
-	campaignSvc := campaignService.NewCampaignService(campaignRepository, voucherRepository, voucherUsageRepository)
-	automationSvc := automationService.NewAutomationService(automationRuleRepository, automationLogRepository)
-	ingestionSvc := ingestionService.NewIngestionService(eventRepository)
-
-	// Mock notification providers (Phase 1)
-	providers := []notificationDomain.NotificationProvider{
-		notificationProvider.NewMockPushProvider(),
-		notificationProvider.NewMockSMSProvider(),
-		notificationProvider.NewMockEmailProvider(),
-		notificationProvider.NewMockZaloProvider(),
-	}
-	notificationSvc := notificationService.NewNotificationService(notificationRepository, providers)
-
-	// Initialize Handlers
-	tenantH := tenantHandler.NewTenantHandler(tenantSvc)
-	customerH := customerHandler.NewCustomerHandler(customerSvc, eventRepository)
-	tripH := tripHandler.NewTripHandler(tripSvc)
-	ingestionH := ingestionHandler.NewIngestionHandler(customerSvc, tripSvc, ingestionSvc)
-	segmentationH := segmentationHandler.NewSegmentationHandler(segmentationSvc)
-	campaignH := campaignHandler.NewCampaignHandler(campaignSvc)
-	automationH := automationHandler.NewAutomationHandler(automationSvc)
-	notificationH := notificationHandler.NewNotificationHandler(notificationSvc)
-	analyticsH := analyticsHandler.NewAnalyticsHandler(a.db)
-
-	// --- Register Routes ---
-
-	// Admin routes (no API key needed for tenant management)
-	tenantH.RegisterRoutes(api)
-
-	// Protected routes (API key required, with cache)
-	apiKeyCache := middleware.NewAPIKeyCache()
-	protected := api.Group("")
-	protected.Use(middleware.APIKeyAuth(a.db, apiKeyCache))
-	{
-		// Phase 1: Core
-		ingestionH.RegisterRoutes(protected)
-		customerH.RegisterRoutes(protected)
-		tripH.RegisterRoutes(protected)
-
-		// Phase 2: Marketing & Intelligence
-		segmentationH.RegisterRoutes(protected)
-		campaignH.RegisterRoutes(protected)
-		automationH.RegisterRoutes(protected)
-		notificationH.RegisterRoutes(protected)
-		analyticsH.RegisterRoutes(protected)
-	}
-
-	log.Printf("[Server] Modules loaded: tenant, customer, trip, ingestion, segmentation, campaign, automation, notification, analytics")
 }

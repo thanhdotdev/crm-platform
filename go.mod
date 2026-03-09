@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
+	github.com/google/wire v0.7.0
 	github.com/joho/godotenv v1.5.1
 	gitlab.com/bship1/bship-common-go.git v1.7.1
 	gorm.io/datatypes v1.2.7
