@@ -109,18 +109,18 @@ func NewCustomerEventPostgresRepo(db *gorm.DB) CustomerEventRepository {
 	return &customerEventPostgresRepo{db: db}
 }
 
-func (r *customerEventPostgresRepo) Create(ctx context.Context, event *domain.CustomerEvent) error {
+func (r *customerEventPostgresRepo) Create(ctx context.Context, event *domain.EventLog) error {
 	return r.db.WithContext(ctx).Create(event).Error
 }
 
-func (r *customerEventPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.CustomerEvent, int64, error) {
-	var events []domain.CustomerEvent
+func (r *customerEventPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error) {
+	var events []domain.EventLog
 	var total int64
 
-	base := r.db.WithContext(ctx).Model(&domain.CustomerEvent{}).Where("tenant_id = ? AND customer_id = ?", tenantID, customerID)
+	base := r.db.WithContext(ctx).Model(&domain.EventLog{}).Where("tenant_id = ? AND user_id = ?", tenantID, customerID)
 	if err := base.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	err := base.Offset(offset).Limit(limit).Order("created_at DESC").Find(&events).Error
+	err := base.Offset(offset).Limit(limit).Order("event_time DESC").Find(&events).Error
 	return events, total, err
 }

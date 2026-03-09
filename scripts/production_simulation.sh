@@ -98,123 +98,123 @@ echo "  └─────────┴─────────────
 echo ""
 echo "  ── U01: VIP Customer (facebook_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u01","data":{"phone":"090100001","full_name":"Trần Nhật Minh","email":"minh@gmail.com","source":"facebook_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u01","data":{"phone":"090100001","full_name":"Trần Nhật Minh","email":"minh@gmail.com","source":"facebook_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u01","data":{"device_type":"ios"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u01","data":{"device_type":"ios"}}' > /dev/null
 for t in 1 2 3 4 5 6; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_completed\",\"external_user_id\":\"u01\",\"data\":{\"external_trip_id\":\"u01-t$t\",\"amount\":$((300000 + RANDOM % 200000)),\"pickup_location\":\"Q1\",\"dropoff_location\":\"Q7\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_completed\",\"external_user_id\":\"u01\",\"data\":{\"external_trip_id\":\"u01-t$t\",\"amount\":$((300000 + RANDOM % 200000)),\"pickup_location\":\"Q1\",\"dropoff_location\":\"Q7\"}}" > /dev/null
 done
 pass "U01: 6 chuyến hoàn thành → VIP"
 
 # ------- U02: Loyal (3 completed, facebook_ads) -------
 echo "  ── U02: Loyal Customer (facebook_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u02","data":{"phone":"090100002","full_name":"Lê Thu Hà","source":"facebook_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u02","data":{"phone":"090100002","full_name":"Lê Thu Hà","source":"facebook_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u02","data":{"device_type":"android"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u02","data":{"device_type":"android"}}' > /dev/null
 for t in 1 2 3; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_completed\",\"external_user_id\":\"u02\",\"data\":{\"external_trip_id\":\"u02-t$t\",\"amount\":250000}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_completed\",\"external_user_id\":\"u02\",\"data\":{\"external_trip_id\":\"u02-t$t\",\"amount\":250000}}" > /dev/null
 done
 pass "U02: 3 chuyến → Loyal"
 
 # ------- U03: Returning (2 completed, google_ads) -------
 echo "  ── U03: Returning Customer (google_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u03","data":{"phone":"090100003","full_name":"Nguyễn Văn Hùng","source":"google_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u03","data":{"phone":"090100003","full_name":"Nguyễn Văn Hùng","source":"google_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u03","data":{"device_type":"android"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u03","data":{"device_type":"android"}}' > /dev/null
 for t in 1 2; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_completed\",\"external_user_id\":\"u03\",\"data\":{\"external_trip_id\":\"u03-t$t\",\"amount\":180000}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_completed\",\"external_user_id\":\"u03\",\"data\":{\"external_trip_id\":\"u03-t$t\",\"amount\":180000}}" > /dev/null
 done
 pass "U03: 2 chuyến → Returning"
 
 # ------- U04: Activated (1 completed, google_ads) -------
 echo "  ── U04: One-and-done (google_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u04","data":{"phone":"090100004","full_name":"Phạm Thị Lan","source":"google_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u04","data":{"phone":"090100004","full_name":"Phạm Thị Lan","source":"google_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u04","data":{"device_type":"ios"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u04","data":{"device_type":"ios"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u04","data":{"external_trip_id":"u04-t1","amount":150000}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u04","data":{"external_trip_id":"u04-t1","amount":150000}}' > /dev/null
 pass "U04: 1 chuyến → Activated (rồi biến mất)"
 
 # ------- U05: Installed but no trip (organic) -------
 echo "  ── U05: Cài app nhưng không dùng (organic) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u05","data":{"phone":"090100005","full_name":"Hoàng Minh Tuấn","source":"organic"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u05","data":{"phone":"090100005","full_name":"Hoàng Minh Tuấn","source":"organic"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u05","data":{"device_type":"android"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u05","data":{"device_type":"android"}}' > /dev/null
 # Behavioral events: mở app, xem xung quanh, rồi đi
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_opened","external_user_id":"u05","data":{}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_opened","external_user_id":"u05","data":{}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"search_trip","external_user_id":"u05","data":{"from":"Q3","to":"Q1"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"search_trip","external_user_id":"u05","data":{"from":"Q3","to":"Q1"}}' > /dev/null
 pass "U05: Cài app → mở → tìm kiếm → rồi thôi"
 
 # ------- U06: Serial Canceller (organic) — ABUSE -------
 echo "  ── U06: Serial Canceller (organic) — sẽ bị flag abuse ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u06","data":{"phone":"090100006","full_name":"Đỗ Quốc Bảo","source":"organic"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u06","data":{"phone":"090100006","full_name":"Đỗ Quốc Bảo","source":"organic"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u06","data":{"device_type":"ios"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u06","data":{"device_type":"ios"}}' > /dev/null
 # 1 trip completed
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u06","data":{"external_trip_id":"u06-t1","amount":200000}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u06","data":{"external_trip_id":"u06-t1","amount":200000}}' > /dev/null
 # 3 trips booked then cancelled
 for c in 1 2 3; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_booked\",\"external_user_id\":\"u06\",\"data\":{\"external_trip_id\":\"u06-c$c\",\"pickup_location\":\"Q5\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_booked\",\"external_user_id\":\"u06\",\"data\":{\"external_trip_id\":\"u06-c$c\",\"pickup_location\":\"Q5\"}}" > /dev/null
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_cancelled\",\"external_user_id\":\"u06\",\"data\":{\"external_trip_id\":\"u06-c$c\",\"cancel_reason\":\"driver too slow\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_cancelled\",\"external_user_id\":\"u06\",\"data\":{\"external_trip_id\":\"u06-c$c\",\"cancel_reason\":\"driver too slow\"}}" > /dev/null
 done
 pass "U06: 1 complete + 3 cancel → abuse pattern"
 
 # ------- U07: Luxury Customer (referral) -------
 echo "  ── U07: Luxury Customer (referral) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u07","data":{"phone":"090100007","full_name":"Võ Thanh Tùng","email":"tung.vo@company.com","source":"referral"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u07","data":{"phone":"090100007","full_name":"Võ Thanh Tùng","email":"tung.vo@company.com","source":"referral"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u07","data":{"device_type":"ios"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u07","data":{"device_type":"ios"}}' > /dev/null
 # 5 high-value trips → sẽ trigger luxury
 for t in 1 2 3 4 5; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_completed\",\"external_user_id\":\"u07\",\"data\":{\"external_trip_id\":\"u07-t$t\",\"amount\":500000,\"pickup_location\":\"Tân Sơn Nhất\",\"dropoff_location\":\"Thủ Đức\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_completed\",\"external_user_id\":\"u07\",\"data\":{\"external_trip_id\":\"u07-t$t\",\"amount\":500000,\"pickup_location\":\"Tân Sơn Nhất\",\"dropoff_location\":\"Thủ Đức\"}}" > /dev/null
 done
 pass "U07: 5 chuyến × 500K = 2.5M → Luxury ✨"
 
 # ------- U08: Just registered (referral) -------
 echo "  ── U08: Mới đăng ký (referral) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u08","data":{"phone":"090100008","full_name":"Bùi Thị Mai","source":"referral"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u08","data":{"phone":"090100008","full_name":"Bùi Thị Mai","source":"referral"}}' > /dev/null
 pass "U08: Đăng ký → chưa cài app, chưa dùng"
 
 # ------- U09: App bouncer (tiktok_ads) -------
 echo "  ── U09: Bouncer - cài rồi xóa (tiktok_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u09","data":{"phone":"090100009","full_name":"Lý Hoàng Nam","source":"tiktok_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u09","data":{"phone":"090100009","full_name":"Lý Hoàng Nam","source":"tiktok_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u09","data":{"device_type":"android"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u09","data":{"device_type":"android"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_opened","external_user_id":"u09","data":{}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_opened","external_user_id":"u09","data":{}}' > /dev/null
 pass "U09: Cài app → mở 1 lần → biến mất"
 
 # ------- U10: Moderate (2 complete + 1 cancel, tiktok_ads) -------
 echo "  ── U10: Moderate user (tiktok_ads) ──"
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u10","data":{"phone":"090100010","full_name":"Trương Mỹ Duyên","source":"tiktok_ads"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u10","data":{"phone":"090100010","full_name":"Trương Mỹ Duyên","source":"tiktok_ads"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"app_installed","external_user_id":"u10","data":{"device_type":"android"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"app_installed","external_user_id":"u10","data":{"device_type":"android"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u10","data":{"external_trip_id":"u10-t1","amount":200000}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u10","data":{"external_trip_id":"u10-t1","amount":200000}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_booked","external_user_id":"u10","data":{"external_trip_id":"u10-c1"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_booked","external_user_id":"u10","data":{"external_trip_id":"u10-c1"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_cancelled","external_user_id":"u10","data":{"external_trip_id":"u10-c1","cancel_reason":"changed plan"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_cancelled","external_user_id":"u10","data":{"external_trip_id":"u10-c1","cancel_reason":"changed plan"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u10","data":{"external_trip_id":"u10-t2","amount":280000}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u10","data":{"external_trip_id":"u10-t2","amount":280000}}' > /dev/null
 pass "U10: 2 complete + 1 cancel → Returning"
 
 # ============================================================================

@@ -21,6 +21,6 @@ type CustomerRepository interface {
 
 // CustomerEventRepository defines the interface for customer event data access.
 type CustomerEventRepository interface {
-	Create(ctx context.Context, event *domain.CustomerEvent) error
-	ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.CustomerEvent, int64, error)
+	Create(ctx context.Context, event *domain.EventLog) error
+	ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error)
 }

@@ -30,8 +30,8 @@ type tenantRecord struct {
 }
 
 // APIKeyAuth returns a middleware that authenticates requests via X-API-Key header.
-// It resolves the tenant from the API key and injects TenantID into the context.
-func APIKeyAuth(db *gorm.DB) gin.HandlerFunc {
+// Uses in-memory cache to avoid DB lookups on every request.
+func APIKeyAuth(db *gorm.DB, cache *APIKeyCache) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader("X-API-Key")
 		if apiKey == "" {
@@ -40,10 +40,17 @@ func APIKeyAuth(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Hash the key for lookup
 		keyHash := hashAPIKey(apiKey)
 
-		// Find API key in database
+		// Check cache first → 0 DB queries on hit
+		if entry := cache.Get(keyHash); entry != nil {
+			c.Set(ContextKeyTenantID, entry.TenantID)
+			c.Set(ContextKeyKeyType, entry.KeyType)
+			c.Next()
+			return
+		}
+
+		// Cache miss → query DB
 		var record apiKeyRecord
 		err := db.Table("api_keys").
 			Select("tenant_id, key_type, is_active").
@@ -74,6 +81,9 @@ func APIKeyAuth(db *gorm.DB) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// Cache the valid key
+		cache.Set(keyHash, record.TenantID, record.KeyType)
 
 		// Update last_used_at (async, non-blocking)
 		go func() {

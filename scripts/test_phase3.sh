@@ -34,29 +34,29 @@ pass "Tenant+Key"
 # Create 3 users with different trip counts
 for u in 1 2 3; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"user_registered\",\"external_user_id\":\"p3-u$u\",\"data\":{\"phone\":\"090$u\",\"full_name\":\"User $u\",\"source\":\"facebook_ads\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"user_registered\",\"external_user_id\":\"p3-u$u\",\"data\":{\"phone\":\"090$u\",\"full_name\":\"User $u\",\"source\":\"facebook_ads\"}}" > /dev/null
 done
 pass "3 users registered"
 
 # User 1: 3 completed trips (loyal) + 1 cancel
 for t in 1 2 3; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_completed\",\"external_user_id\":\"p3-u1\",\"data\":{\"external_trip_id\":\"p3-t1-$t\",\"amount\":400000}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_completed\",\"external_user_id\":\"p3-u1\",\"data\":{\"external_trip_id\":\"p3-t1-$t\",\"amount\":400000}}" > /dev/null
 done
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_booked","external_user_id":"p3-u1","data":{"external_trip_id":"p3-t1-c1"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_booked","external_user_id":"p3-u1","data":{"external_trip_id":"p3-t1-c1"}}' > /dev/null
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_cancelled","external_user_id":"p3-u1","data":{"external_trip_id":"p3-t1-c1"}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_cancelled","external_user_id":"p3-u1","data":{"external_trip_id":"p3-t1-c1"}}' > /dev/null
 pass "User1: 3 completed + 1 cancel"
 
 # User 2: 1 completed trip + 3 cancels (suspicious!)
 curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"p3-u2","data":{"external_trip_id":"p3-t2-1","amount":300000}}' > /dev/null
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"p3-u2","data":{"external_trip_id":"p3-t2-1","amount":300000}}' > /dev/null
 for canc in 1 2 3; do
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_booked\",\"external_user_id\":\"p3-u2\",\"data\":{\"external_trip_id\":\"p3-t2-c$canc\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_booked\",\"external_user_id\":\"p3-u2\",\"data\":{\"external_trip_id\":\"p3-t2-c$canc\"}}" > /dev/null
   curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-    -d "{\"event_type\":\"trip_cancelled\",\"external_user_id\":\"p3-u2\",\"data\":{\"external_trip_id\":\"p3-t2-c$canc\"}}" > /dev/null
+    -d "{\"user_type\":\"customer\",\"event_type\":\"trip_cancelled\",\"external_user_id\":\"p3-u2\",\"data\":{\"external_trip_id\":\"p3-t2-c$canc\"}}" > /dev/null
 done
 pass "User2: 1 completed + 3 cancels (abuse pattern)"
 

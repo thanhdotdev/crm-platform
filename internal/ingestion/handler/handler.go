@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -38,15 +39,14 @@ func (h *IngestionHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/ingest/events", h.IngestEvent)
 }
 
-// ingestRequest represents a single event from the SDK.
 type ingestRequest struct {
 	EventType      string          `json:"event_type" binding:"required"`
 	ExternalUserID string          `json:"external_user_id" binding:"required"`
+	UserType       string          `json:"user_type" binding:"required"`
 	Data           json.RawMessage `json:"data"`
 	Timestamp      *time.Time      `json:"timestamp"`
 }
 
-// IngestEvent handles POST /api/v1/ingest/events — single event.
 func (h *IngestionHandler) IngestEvent(c *gin.Context) {
 	tenantID, ok := middleware.GetTenantID(c)
 	if !ok {
@@ -75,20 +75,23 @@ func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uuid.UUID, req 
 	keyType := middleware.GetKeyType(c)
 
 	// First, ensure customer exists (upsert)
-	// customer, err := h.ensureCustomer(ctx, tenantID, req)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	customer, err := h.ensureCustomer(ctx, tenantID, req)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Customer found: %v", customer)
 
 	// Record the event in timeline
 	eventData := datatypes.JSON(req.Data)
-	event := &customerDomain.CustomerEvent{
-		TenantID: tenantID,
-		// CustomerID: customer.ID,
+	event := &customerDomain.EventLog{
+		TenantID:  tenantID,
+		UserID:    customer.ID,
+		UserType:  req.UserType,
 		EventType: req.EventType,
 		EventData: eventData,
 		Source:    "sdk_" + keyType,
-		CreatedAt: timeOrNow(req.Timestamp),
+		EventTime: timeOrNow(req.Timestamp),
 	}
 	_ = h.customerSvc.RecordEvent(ctx, event)
 

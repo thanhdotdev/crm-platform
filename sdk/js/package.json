@@ -9,8 +9,12 @@
     "dev": "tsc --watch"
   },
   "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0"
   },
-  "files": ["dist/"],
+  "files": [
+    "dist/"
+  ],
   "license": "MIT"
 }

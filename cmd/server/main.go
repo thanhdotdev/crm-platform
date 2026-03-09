@@ -79,7 +79,7 @@ func main() {
 		&tenantDomain.Tenant{},
 		&tenantDomain.APIKey{},
 		&customerDomain.Customer{},
-		&customerDomain.CustomerEvent{},
+		&customerDomain.EventLog{},
 		&tripDomain.Trip{},
 		// Phase 2
 		&segmentationDomain.Segment{},
@@ -158,9 +158,10 @@ func main() {
 	// Admin routes (no API key needed for tenant management)
 	tenantH.RegisterRoutes(v1)
 
-	// Protected routes (API key required)
+	// Protected routes (API key required, with cache)
+	apiKeyCache := middleware.NewAPIKeyCache()
 	protected := v1.Group("")
-	protected.Use(middleware.APIKeyAuth(db))
+	protected.Use(middleware.APIKeyAuth(db, apiKeyCache))
 	{
 		// Phase 1: Core
 		ingestionH.RegisterRoutes(protected)

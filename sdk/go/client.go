@@ -8,9 +8,11 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"gitlab.com/bship1/bship-common-go.git/pkg/zutils_time"
 )
 
-// Client is the CRM SDK client for sending events from backend services.
+// Client sends events to the CRM platform.
 type Client struct {
 	apiKey   string
 	endpoint string
@@ -39,24 +41,25 @@ func NewClient(opts ...Option) *Client {
 	return c
 }
 
-// Track sends an event to the CRM platform.
-func (c *Client) Track(ctx context.Context, event Event) error {
-	payload := eventPayload{
-		EventType:      event.EventType(),
-		ExternalUserID: event.UserID(),
-		Data:           event,
-		Timestamp:      time.Now(),
+// Track sends a single event to the CRM platform.
+func (c *Client) Track(ctx context.Context, eventType, externalUserID, userType string, data map[string]interface{}) error {
+	payload := map[string]interface{}{
+		"event_type":       eventType,
+		"external_user_id": externalUserID,
+		"user_type":        userType,
+		"data":             data,
+		"timestamp":        zutils_time.NowGMT7().Format(time.RFC3339),
 	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("crmsdk: failed to marshal event: %w", err)
+		return fmt.Errorf("crmsdk: marshal error: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
 		c.endpoint+"/api/v1/ingest/events", bytes.NewReader(body))
 	if err != nil {
-		return fmt.Errorf("crmsdk: failed to create request: %w", err)
+		return fmt.Errorf("crmsdk: request error: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -64,7 +67,7 @@ func (c *Client) Track(ctx context.Context, event Event) error {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return fmt.Errorf("crmsdk: request failed: %w", err)
+		return fmt.Errorf("crmsdk: send error: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -73,12 +76,4 @@ func (c *Client) Track(ctx context.Context, event Event) error {
 	}
 
 	return nil
-}
-
-// eventPayload is the JSON body sent to the Ingestion API.
-type eventPayload struct {
-	EventType      string    `json:"event_type"`
-	ExternalUserID string    `json:"external_user_id"`
-	Data           Event     `json:"data"`
-	Timestamp      time.Time `json:"timestamp"`
 }

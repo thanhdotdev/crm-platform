@@ -1,66 +1,65 @@
-# CRM SDK — Go
+# CRM Go SDK
 
-Go SDK cho CRM Platform. Dùng ở **backend đối tác** với **server key** (`sk_live_*`).
+A lightweight Go SDK for sending events to the CRM Platform.
 
-## Cài đặt
+## Installation
 
 ```bash
 go get github.com/vothanh/crm-platform/sdk/go
 ```
 
-## Sử dụng
+## Usage
+
+### 1. Initialization
+
+By default, the SDK reads the API key and endpoint from environment variables (`CRM_API_KEY` and `CRM_ENDPOINT`).
 
 ```go
-import crmsdk "github.com/vothanh/crm-platform/sdk/go"
+package main
 
-// Đọc từ env: CRM_API_KEY, CRM_ENDPOINT
-client := crmsdk.NewClient()
-
-// Hoặc truyền trực tiếp:
-client := crmsdk.NewClient(
-    crmsdk.WithAPIKey("sk_live_xxxx"),
-    crmsdk.WithEndpoint("https://crm.example.com"),
+import (
+	"context"
+	"log"
+	
+	"github.com/vothanh/crm-platform/sdk/go" // import path depends on your project setup
 )
 
-// Gửi event
-client.Track(ctx, crmsdk.EventUserRegistered{
-    ExternalUserID: "user-123",
-    Phone:          "0901234567",
-    FullName:       "Nguyễn Văn A",
-    Source:         crmsdk.SourceFacebookAds,
-})
-
-client.Track(ctx, crmsdk.EventTripCompleted{
-    ExternalUserID: "user-123",
-    ExternalTripID: "trip-456",
-    Amount:         350000,
-})
-
-// Batch events
-client.TrackBatch(ctx, []crmsdk.Event{
-    crmsdk.EventAppOpened{ExternalUserID: "user-123"},
-    crmsdk.EventPageViewed{ExternalUserID: "user-123", PageName: "home"},
-})
+func main() {
+	// Initialize using environment variables
+	// export CRM_API_KEY="sk_live_..."
+	// export CRM_ENDPOINT="http://localhost:8080"
+	client := crmsdk.NewClient()
+    
+    // OR initialize manually
+    // client := crmsdk.NewClient("sk_live_...", "http://localhost:8080")
+    
+    // ...
+}
 ```
 
-## Event Types
+### 2. Tracking Events
 
-| Event | Description |
-|---|---|
-| `EventUserRegistered` | User đăng ký |
-| `EventAppInstalled` | Cài đặt app |
-| `EventAppOpened` | Mở app |
-| `EventSearchTrip` | Tìm chuyến |
-| `EventTripBooked` | Đặt chuyến |
-| `EventTripCompleted` | Hoàn thành chuyến |
-| `EventTripCancelled` | Huỷ chuyến |
-| `EventButtonClicked` | Click button |
-| `EventPageViewed` | Xem trang |
-| `EventEnterLocation` | Nhập địa điểm |
+Use the `Track` method to send events to the CRM. The parameters are:
+- `ctx`: context for the request
+- `eventType`: string identifying the event (e.g. "user_registered", "trip_completed")
+- `externalUserID`: unique identifier for the user in your system
+- `userType`: type of user (e.g. "customer", "driver")
+- `data`: a map containing custom event properties
 
-## Environment Variables
+```go
+err := client.Track(
+    context.Background(),
+    "trip_completed",     // event type
+    "user-123",           // user internal ID
+    "customer",           // user type
+    map[string]interface{}{ // custom data
+        "amount": 350000,
+        "external_trip_id": "trip-999",
+        "dropoff_location": "District 1",
+    },
+)
 
-| Variable | Description |
-|---|---|
-| `CRM_API_KEY` | Server API key (`sk_live_*`) |
-| `CRM_ENDPOINT` | CRM API endpoint |
+if err != nil {
+    log.Printf("Failed to track event: %v", err)
+}
+```

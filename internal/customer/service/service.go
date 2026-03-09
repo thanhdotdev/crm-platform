@@ -75,7 +75,7 @@ func (s *CustomerService) ListCustomers(ctx context.Context, tenantID uuid.UUID,
 }
 
 // RecordEvent stores a customer behavioral event and updates lead score.
-func (s *CustomerService) RecordEvent(ctx context.Context, event *domain.CustomerEvent) error {
+func (s *CustomerService) RecordEvent(ctx context.Context, event *domain.EventLog) error {
 	if err := s.eventRepo.Create(ctx, event); err != nil {
 		return apperror.Wrap("DB_ERROR", "failed to record event", err)
 	}
@@ -134,7 +134,7 @@ func (s *CustomerService) GetLifecycleCounts(ctx context.Context, tenantID uuid.
 }
 
 // GetCustomerTimeline returns the event timeline for a customer.
-func (s *CustomerService) GetCustomerTimeline(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.CustomerEvent, int64, error) {
+func (s *CustomerService) GetCustomerTimeline(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error) {
 	return s.eventRepo.ListByCustomerID(ctx, tenantID, customerID, offset, limit)
 }
 

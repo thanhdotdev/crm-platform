@@ -37,23 +37,23 @@ H="-H X-API-Key:$KEY -H Content-Type:application/json"
 echo ""
 echo "📥 INGESTION"
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"user_registered","external_user_id":"u001","data":{"phone":"090111","full_name":"Nguyen Van A","source":"facebook_ads"}}')
+  -d '{"user_type":"customer","event_type":"user_registered","external_user_id":"u001","data":{"phone":"090111","full_name":"Nguyen Van A","source":"facebook_ads"}}')
 check "user_registered" "$R"
 
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_booked","external_user_id":"u001","data":{"external_trip_id":"t001","amount":350000}}')
+  -d '{"user_type":"customer","event_type":"trip_booked","external_user_id":"u001","data":{"external_trip_id":"t001","amount":350000}}')
 check "trip_booked" "$R"
 
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t001","amount":350000}}')
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t001","amount":350000}}')
 check "trip_completed #1" "$R"
 
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t002","amount":400000}}')
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t002","amount":400000}}')
 check "trip_completed #2" "$R"
 
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t003","amount":350000}}')
+  -d '{"user_type":"customer","event_type":"trip_completed","external_user_id":"u001","data":{"external_trip_id":"t003","amount":350000}}')
 check "trip_completed #3" "$R"
 
 # --- 3. Customer verify ---
@@ -74,9 +74,9 @@ if [ "$TIER" = "luxury" ]; then pass "tier=luxury (≥3 trips, ≥1M)"; else fai
 
 # Cancel test
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_booked","external_user_id":"u001","data":{"external_trip_id":"t-cancel"}}')
+  -d '{"user_type":"customer","event_type":"trip_booked","external_user_id":"u001","data":{"external_trip_id":"t-cancel"}}')
 R=$(curl -sf -X POST "$BASE/api/v1/ingest/events" $H \
-  -d '{"event_type":"trip_cancelled","external_user_id":"u001","data":{"external_trip_id":"t-cancel","cancel_reason":"rain"}}')
+  -d '{"user_type":"customer","event_type":"trip_cancelled","external_user_id":"u001","data":{"external_trip_id":"t-cancel","cancel_reason":"rain"}}')
 R=$(curl -sf "$BASE/api/v1/customers/$CID" $H)
 TRIPS2=$(echo "$R" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['total_trips'])")
 if [ "$TRIPS2" = "3" ]; then pass "Cancel doesn't increment total_trips ✓"; else fail "cancel" "total_trips=$TRIPS2"; fi
