@@ -1,10 +1,10 @@
 package database
 
 import (
-	"fmt"
-	"log"
+	"fmt" // This import is no longer needed if zlog is used for all logging
 	"time"
 
+	"gitlab.com/bship1/bship-common-go.git/pkg/zlog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -29,7 +29,7 @@ func NewPostgresDB(dsn string) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 
-	log.Println("[Database] Connected to PostgreSQL successfully (pool: 50 max, 10 idle)")
+	zlog.Info("Connected to PostgreSQL successfully (pool: 50 max, 10 idle)")
 	return db, nil
 }
 
@@ -38,6 +38,6 @@ func AutoMigrate(db *gorm.DB, models ...interface{}) error {
 	if err := db.AutoMigrate(models...); err != nil {
 		return fmt.Errorf("failed to auto-migrate: %w", err)
 	}
-	log.Println("[Database] Auto-migration completed")
+	zlog.Info("Auto-migration completed")
 	return nil
 }

@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-
 	"github.com/vothanh/crm-platform/internal/infra/app"
 	"github.com/vothanh/crm-platform/internal/infra/config"
+	"gitlab.com/bship1/bship-common-go.git/pkg/zlog"
 	"gitlab.com/bship1/bship-common-go.git/pkg/zserver"
 )
 
@@ -15,19 +14,19 @@ func main() {
 	// 1. Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("[Main] Failed to load config: %v", err)
+		zlog.Fatal("Failed to load config", zlog.Field("error", err))
 	}
 
 	// 2. Initialize application (DI, Router, DB)
 	application, err := app.InitializeApp(cfg)
 	if err != nil {
-		log.Fatalf("[Main] Failed to initialize app: %v", err)
+		zlog.Fatal("Failed to initialize app", zlog.Field("error", err))
 	}
 
 	// 3. Run application (Block and wait for shutdown)
 	if err := application.Run(); err != nil {
-		log.Fatalf("[Main] Application stopped with error: %v", err)
+		zlog.Fatal("Application stopped with error", zlog.Field("error", err))
 	}
 
-	log.Println("[Main] Graceful shutdown completed cleanly.")
+	zlog.Info("Graceful shutdown completed cleanly.")
 }

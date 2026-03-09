@@ -16,3 +16,5 @@
 {"L":"INFO","timestamp":"2026-03-09T23:54:11+07:00","C":"zlog/logger.go:216","M":"Initializing services"}
 {"L":"INFO","timestamp":"2026-03-10T00:01:25+07:00","C":"zlog/logger.go:216","M":"Initializing services"}
 {"L":"INFO","timestamp":"2026-03-10T00:01:27+07:00","C":"zlog/logger.go:216","M":"ZProfiler stats server starting","port":60000,"url":"http://localhost:60000/stats"}
+{"L":"INFO","timestamp":"2026-03-10T00:08:24+07:00","C":"zlog/logger.go:216","M":"Initializing services"}
+{"L":"INFO","timestamp":"2026-03-10T00:08:26+07:00","C":"zlog/logger.go:216","M":"ZProfiler stats server starting","port":60000,"url":"http://localhost:60000/stats"}

@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gitlab.com/bship1/bship-common-go.git/pkg/zlog"
 )
 
 // Logger returns a middleware that logs HTTP requests.
@@ -19,6 +19,11 @@ func Logger() gin.HandlerFunc {
 		latency := time.Since(start)
 		status := c.Writer.Status()
 
-		log.Printf("[HTTP] %s %s → %d (%v)", method, path, status, latency)
+		zlog.Info("HTTP Request",
+			zlog.Field("method", method),
+			zlog.Field("path", path),
+			zlog.Field("status", status),
+			zlog.Field("latency", latency.String()),
+		)
 	}
 }

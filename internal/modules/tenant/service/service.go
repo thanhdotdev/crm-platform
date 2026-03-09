@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/tenant/domain"
 	"github.com/vothanh/crm-platform/internal/modules/tenant/repository"
-	"github.com/vothanh/crm-platform/pkg/apperror"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
+	"github.com/vothanh/crm-platform/pkg/apperror"
 )
 
 // TenantService handles business logic for tenant management.

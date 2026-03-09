@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vothanh/crm-platform/internal/infra/config"
 	"github.com/vothanh/crm-platform/internal/infra/database"
+	"gitlab.com/bship1/bship-common-go.git/pkg/zlog"
 	"gorm.io/gorm"
 
 	// Analytics
@@ -115,7 +115,7 @@ func NewAppWithDependencies(
 		analyticsH.RegisterRoutes(protected)
 	}
 
-	log.Printf("[Server] Modules loaded via Wire: tenant, customer, trip, ingestion, segmentation, campaign, automation, notification, analytics")
+	zlog.Info("Modules loaded via Wire: tenant, customer, trip, ingestion, segmentation, campaign, automation, notification, analytics")
 
 	return app, nil
 }
@@ -133,7 +133,7 @@ func (a *App) Run() error {
 
 	// Start the server
 	go func() {
-		log.Printf("[Server] Starting CRM Platform on %s", addr)
+		zlog.Infof("Starting CRM Platform on %s", addr)
 		if err := a.server.ListenAndServe(); string(err.Error()) != "http: Server closed" {
 			serverErrors <- err
 		}
@@ -149,7 +149,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("server error: %w", err)
 
 	case sig := <-shutdown:
-		log.Printf("[Server] Shutdown signal received: %v. Initiating graceful shutdown...", sig)
+		zlog.Infof("Shutdown signal received: %v. Initiating graceful shutdown...", sig)
 
 		// Ask listener to shut down in 10 seconds
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
