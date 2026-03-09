@@ -23,7 +23,6 @@ type Trip struct {
 	TenantID        uuid.UUID  `gorm:"type:uuid;index;not null" json:"tenant_id"`
 	CustomerID      uuid.UUID  `gorm:"type:uuid;index;not null" json:"customer_id"`
 	ExternalTripID  string     `gorm:"index" json:"external_trip_id,omitempty"`
-	TripNumber      int        `json:"trip_number"`
 	Status          TripStatus `gorm:"default:'booked'" json:"status"`
 	PickupLocation  string     `json:"pickup_location,omitempty"`
 	DropoffLocation string     `json:"dropoff_location,omitempty"`

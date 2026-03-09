@@ -201,53 +201,6 @@ func (h *IngestionHandler) handleUserEvent(ctx context.Context, tenantID uuid.UU
 	}, nil
 }
 
-// handleCustomerSync handles the "customer_sync" event — used to import existing users
-// with their historical data from the partner's system (cold start).
-func (h *IngestionHandler) handleCustomerSync(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
-	var data map[string]interface{}
-	if req.Data != nil {
-		_ = json.Unmarshal(req.Data, &data)
-	}
-
-	updated := false
-
-	// Set historical trip count from partner
-	if v, ok := data["historical_trip_count"].(float64); ok && v > 0 {
-		customer.HistoricalTripCount = int(v)
-		updated = true
-	}
-	// Set historical spend from partner
-	if v, ok := data["historical_spent"].(float64); ok && v > 0 {
-		customer.HistoricalSpent = v
-		updated = true
-	}
-	// Allow updating lifecycle stage based on historical data
-	if v, ok := data["tier"].(string); ok && v != "" {
-		customer.Tier = customerDomain.CustomerTier(v)
-		updated = true
-	}
-
-	if updated {
-		customer.UpdateLifecycleStage()
-		customer.CheckLuxuryEligibility()
-		_, err := h.customerSvc.UpsertCustomer(ctx, customer)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return map[string]interface{}{
-		"customer_id":           customer.ID,
-		"lifecycle_stage":       customer.LifecycleStage,
-		"tier":                  customer.Tier,
-		"historical_trip_count": customer.HistoricalTripCount,
-		"historical_spent":      customer.HistoricalSpent,
-		"effective_trips":       customer.EffectiveTripCount(),
-		"effective_spent":       customer.EffectiveSpent(),
-		"synced":                updated,
-	}, nil
-}
-
 func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
 	var data map[string]interface{}
 	if req.Data != nil {
@@ -273,20 +226,16 @@ func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uuid.U
 	if v, ok := data["amount"].(float64); ok {
 		trip.Amount = v
 	}
-	// Accept partner's trip_number if provided
-	if v, ok := data["trip_number"].(float64); ok && v > 0 {
-		trip.TripNumber = int(v)
-	}
 
+	// trip_number is NOT assigned at booking — only on completion
 	created, err := h.tripSvc.CreateTrip(ctx, trip)
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]interface{}{
-		"trip_id":     created.ID,
-		"trip_number": created.TripNumber,
-		"status":      created.Status,
+		"trip_id": created.ID,
+		"status":  created.Status,
 	}, nil
 }
 
@@ -301,7 +250,10 @@ func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uui
 		amount = v
 	}
 
-	// If external trip ID provided, try completing that trip
+	// Update customer stats
+	luxuryUpgraded, _ := h.customerSvc.IncrementTrip(ctx, tenantID, customer.ID, amount)
+
+	// If external trip ID provided, create/update the trip record
 	if extID, ok := data["external_trip_id"].(string); ok && extID != "" {
 		trip := &tripDomain.Trip{
 			TenantID:       tenantID,
@@ -313,27 +265,18 @@ func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uui
 		}
 		now := time.Now()
 		trip.CompletedAt = &now
-		// Accept partner's trip_number if provided
-		if v, ok := data["trip_number"].(float64); ok && v > 0 {
-			trip.TripNumber = int(v)
-		}
-		created, err := h.tripSvc.CreateTrip(ctx, trip) // idempotent — updates if exists
+		created, err := h.tripSvc.CreateTrip(ctx, trip)
 		if err != nil {
 			return nil, err
 		}
 
-		// Update customer stats
-		luxuryUpgraded, _ := h.customerSvc.IncrementTrip(ctx, tenantID, customer.ID, amount)
-
 		return map[string]interface{}{
 			"trip_id":         created.ID,
-			"trip_number":     created.TripNumber,
 			"luxury_upgraded": luxuryUpgraded,
 		}, nil
 	}
 
-	// No external trip ID — just increment customer stats
-	luxuryUpgraded, _ := h.customerSvc.IncrementTrip(ctx, tenantID, customer.ID, amount)
+	// No external trip ID — stats already updated
 	return map[string]interface{}{
 		"customer_id":     customer.ID,
 		"luxury_upgraded": luxuryUpgraded,

@@ -11,31 +11,29 @@ import (
 // Customer is the core entity representing a customer in the CRM.
 // It stores the 360° customer profile including identity, behavior metrics, and lifecycle state.
 type Customer struct {
-	ID                  uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID            uuid.UUID      `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	ExternalID          string         `gorm:"index" json:"external_id,omitempty"`
-	Phone               string         `gorm:"not null" json:"phone"`
-	FullName            string         `json:"full_name"`
-	Email               string         `json:"email,omitempty"`
-	Gender              string         `json:"gender,omitempty"`
-	DateOfBirth         *time.Time     `json:"date_of_birth,omitempty"`
-	AvatarURL           string         `json:"avatar_url,omitempty"`
-	Source              string         `json:"source,omitempty"`
-	CampaignID          string         `json:"campaign_id,omitempty"`
-	DeviceType          string         `json:"device_type,omitempty"`
-	LifecycleStage      LifecycleStage `gorm:"default:'new_user'" json:"lifecycle_stage"`
-	Tier                CustomerTier   `gorm:"default:'standard'" json:"tier"`
-	LeadScore           int            `gorm:"default:0" json:"lead_score"`
-	TotalTrips          int            `gorm:"default:0" json:"total_trips"`           // completed trips tracked IN CRM
-	TotalSpent          float64        `gorm:"default:0" json:"total_spent"`           // revenue tracked IN CRM
-	HistoricalTripCount int            `gorm:"default:0" json:"historical_trip_count"` // trips BEFORE CRM (from partner)
-	HistoricalSpent     float64        `gorm:"default:0" json:"historical_spent"`      // spend BEFORE CRM (from partner)
-	LastTripAt          *time.Time     `json:"last_trip_at,omitempty"`
-	AppInstalledAt      *time.Time     `json:"app_installed_at,omitempty"`
-	FirstTripAt         *time.Time     `json:"first_trip_at,omitempty"`
-	Metadata            datatypes.JSON `gorm:"type:jsonb" json:"metadata,omitempty"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
+	ID             uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
+	TenantID       uuid.UUID      `gorm:"type:uuid;index;not null" json:"tenant_id"`
+	ExternalID     string         `gorm:"index" json:"external_id,omitempty"`
+	Phone          string         `gorm:"not null" json:"phone"`
+	FullName       string         `json:"full_name"`
+	Email          string         `json:"email,omitempty"`
+	Gender         string         `json:"gender,omitempty"`
+	DateOfBirth    *time.Time     `json:"date_of_birth,omitempty"`
+	AvatarURL      string         `json:"avatar_url,omitempty"`
+	Source         string         `json:"source,omitempty"`
+	CampaignID     string         `json:"campaign_id,omitempty"`
+	DeviceType     string         `json:"device_type,omitempty"`
+	LifecycleStage LifecycleStage `gorm:"default:'new_user'" json:"lifecycle_stage"`
+	Tier           CustomerTier   `gorm:"default:'standard'" json:"tier"`
+	LeadScore      int            `gorm:"default:0" json:"lead_score"`
+	TotalTrips     int            `gorm:"default:0" json:"total_trips"` // completed trips only
+	TotalSpent     float64        `gorm:"default:0" json:"total_spent"` // revenue from completed trips
+	LastTripAt     *time.Time     `json:"last_trip_at,omitempty"`
+	AppInstalledAt *time.Time     `json:"app_installed_at,omitempty"`
+	FirstTripAt    *time.Time     `json:"first_trip_at,omitempty"`
+	Metadata       datatypes.JSON `gorm:"type:jsonb" json:"metadata,omitempty"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
 // BeforeCreate generates a UUID before inserting.
@@ -52,27 +50,16 @@ func (c *Customer) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// EffectiveTripCount returns total trips including historical (from partner system).
-func (c *Customer) EffectiveTripCount() int {
-	return c.TotalTrips + c.HistoricalTripCount
-}
-
-// EffectiveSpent returns total spent including historical.
-func (c *Customer) EffectiveSpent() float64 {
-	return c.TotalSpent + c.HistoricalSpent
-}
-
-// UpdateLifecycleStage recalculates lifecycle based on TOTAL trip count (CRM + historical).
+// UpdateLifecycleStage recalculates lifecycle based on completed trip count.
 func (c *Customer) UpdateLifecycleStage() {
-	totalTrips := c.EffectiveTripCount()
 	switch {
-	case totalTrips >= 5:
+	case c.TotalTrips >= 5:
 		c.LifecycleStage = LifecycleVIP
-	case totalTrips >= 3:
+	case c.TotalTrips >= 3:
 		c.LifecycleStage = LifecycleLoyal
-	case totalTrips >= 2:
+	case c.TotalTrips >= 2:
 		c.LifecycleStage = LifecycleReturning
-	case totalTrips >= 1:
+	case c.TotalTrips >= 1:
 		c.LifecycleStage = LifecycleActivated
 	case c.AppInstalledAt != nil:
 		c.LifecycleStage = LifecycleInstalledNoTrip
@@ -87,8 +74,7 @@ func (c *Customer) CheckLuxuryEligibility() bool {
 	if c.Tier == TierLuxury {
 		return false // already luxury
 	}
-	// Use effective counts (CRM + historical from partner)
-	if c.EffectiveTripCount() >= LuxuryMinTrips && c.EffectiveSpent() >= LuxuryMinSpent {
+	if c.TotalTrips >= LuxuryMinTrips && c.TotalSpent >= LuxuryMinSpent {
 		c.Tier = TierLuxury
 		return true // just upgraded
 	}

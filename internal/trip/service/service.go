@@ -46,16 +46,6 @@ func (s *TripService) CreateTrip(ctx context.Context, trip *domain.Trip) (*domai
 		}
 	}
 
-	// Trip number: use partner-provided value if > 0, otherwise auto-sequence
-	// using ALL trips (not just completed) to avoid duplicates after cancels.
-	if trip.TripNumber <= 0 {
-		count, err := s.tripRepo.CountAllByCustomerID(ctx, trip.TenantID, trip.CustomerID)
-		if err != nil {
-			return nil, apperror.Wrap("DB_ERROR", "failed to count trips", err)
-		}
-		trip.TripNumber = int(count) + 1
-	}
-
 	if trip.BookedAt.IsZero() {
 		trip.BookedAt = time.Now()
 	}

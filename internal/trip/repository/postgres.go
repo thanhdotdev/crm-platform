@@ -56,15 +56,6 @@ func (r *tripPostgresRepo) Update(ctx context.Context, trip *domain.Trip) error 
 	return r.db.WithContext(ctx).Save(trip).Error
 }
 
-// CountAllByCustomerID counts ALL trips (for sequential trip_number assignment).
-func (r *tripPostgresRepo) CountAllByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID) (int64, error) {
-	var count int64
-	err := r.db.WithContext(ctx).Model(&domain.Trip{}).
-		Where("tenant_id = ? AND customer_id = ?", tenantID, customerID).
-		Count(&count).Error
-	return count, err
-}
-
 // CountCompletedByCustomerID counts only COMPLETED trips (for lifecycle/tier logic).
 func (r *tripPostgresRepo) CountCompletedByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID) (int64, error) {
 	var count int64
