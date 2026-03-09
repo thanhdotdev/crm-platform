@@ -6,29 +6,25 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/customer/domain"
-	"github.com/vothanh/crm-platform/internal/modules/customer/repository"
 	"github.com/vothanh/crm-platform/pkg/apperror"
 )
 
-// CustomerService handles business logic for customer management.
-type CustomerService struct {
-	customerRepo repository.CustomerRepository
-	eventRepo    repository.CustomerEventRepository
+// customerService handles business logic for customer management.
+type customerService struct {
+	customerRepo domain.CustomerRepository
 }
 
 // NewCustomerService creates a new CustomerService.
 func NewCustomerService(
-	customerRepo repository.CustomerRepository,
-	eventRepo repository.CustomerEventRepository,
-) *CustomerService {
-	return &CustomerService{
+	customerRepo domain.CustomerRepository,
+) domain.CustomerService {
+	return &customerService{
 		customerRepo: customerRepo,
-		eventRepo:    eventRepo,
 	}
 }
 
 // UpsertCustomer creates or updates a customer (used by Ingestion API).
-func (s *CustomerService) UpsertCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (s *customerService) UpsertCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	if customer.ExternalID != "" {
 		existing, err := s.customerRepo.GetByExternalID(ctx, customer.TenantID, customer.ExternalID)
 		if err != nil {
@@ -58,7 +54,7 @@ func (s *CustomerService) UpsertCustomer(ctx context.Context, customer *domain.C
 }
 
 // GetCustomer retrieves a customer by ID (tenant-scoped).
-func (s *CustomerService) GetCustomer(ctx context.Context, tenantID, id uuid.UUID) (*domain.Customer, error) {
+func (s *customerService) GetCustomer(ctx context.Context, tenantID, id uuid.UUID) (*domain.Customer, error) {
 	customer, err := s.customerRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch customer", err)
@@ -70,38 +66,13 @@ func (s *CustomerService) GetCustomer(ctx context.Context, tenantID, id uuid.UUI
 }
 
 // ListCustomers returns a paginated list of customers (tenant-scoped).
-func (s *CustomerService) ListCustomers(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Customer, int64, error) {
+func (s *customerService) ListCustomers(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Customer, int64, error) {
 	return s.customerRepo.List(ctx, tenantID, offset, limit)
-}
-
-// RecordEvent stores a customer behavioral event and updates lead score.
-func (s *CustomerService) RecordEvent(ctx context.Context, event *domain.EventLog) error {
-	if err := s.eventRepo.Create(ctx, event); err != nil {
-		return apperror.Wrap("DB_ERROR", "failed to record event", err)
-	}
-
-	// scoreIncrement := getScoreForEvent(event.EventType)
-	// if scoreIncrement != 0 && event.CustomerID != nil {
-	// 	customer, err := s.customerRepo.GetByID(ctx, event.TenantID, *event.CustomerID)
-	// 	if err != nil || customer == nil {
-	// 		return nil
-	// 	}
-	// 	customer.LeadScore += scoreIncrement
-	// 	if customer.LeadScore < 0 {
-	// 		customer.LeadScore = 0
-	// 	}
-	// 	if customer.LeadScore > 100 {
-	// 		customer.LeadScore = 100
-	// 	}
-	// 	_ = s.customerRepo.Update(ctx, customer)
-	// }
-
-	return nil
 }
 
 // IncrementTrip updates customer stats when a trip is completed.
 // Returns true if customer was just upgraded to Luxury tier.
-func (s *CustomerService) IncrementTrip(ctx context.Context, tenantID, customerID uuid.UUID, amount float64) (bool, error) {
+func (s *customerService) IncrementTrip(ctx context.Context, tenantID, customerID uuid.UUID, amount float64) (bool, error) {
 	customer, err := s.customerRepo.GetByID(ctx, tenantID, customerID)
 	if err != nil {
 		return false, apperror.Wrap("DB_ERROR", "failed to fetch customer", err)
@@ -129,13 +100,8 @@ func (s *CustomerService) IncrementTrip(ctx context.Context, tenantID, customerI
 }
 
 // GetLifecycleCounts returns customer counts grouped by lifecycle stage.
-func (s *CustomerService) GetLifecycleCounts(ctx context.Context, tenantID uuid.UUID) (map[string]int64, error) {
+func (s *customerService) GetLifecycleCounts(ctx context.Context, tenantID uuid.UUID) (map[string]int64, error) {
 	return s.customerRepo.CountByLifecycle(ctx, tenantID)
-}
-
-// GetCustomerTimeline returns the event timeline for a customer.
-func (s *CustomerService) GetCustomerTimeline(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error) {
-	return s.eventRepo.ListByCustomerID(ctx, tenantID, customerID, offset, limit)
 }
 
 // Lead scoring rules per CEO requirements.

@@ -3,34 +3,47 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	customerDomain "github.com/vothanh/crm-platform/internal/modules/customer/domain"
-	customerService "github.com/vothanh/crm-platform/internal/modules/customer/service"
+	ingestionDomain "github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
+	ingestionService "github.com/vothanh/crm-platform/internal/modules/ingestion/service"
 	tripDomain "github.com/vothanh/crm-platform/internal/modules/trip/domain"
-	tripService "github.com/vothanh/crm-platform/internal/modules/trip/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
 	"github.com/vothanh/crm-platform/pkg/response"
 	"gorm.io/datatypes"
 )
 
+// CustomerActuator defines the specific customer operations needed by ingestion
+type CustomerActuator interface {
+	UpsertCustomer(ctx context.Context, customer *customerDomain.Customer) (*customerDomain.Customer, error)
+	IncrementTrip(ctx context.Context, tenantID, customerID uuid.UUID, amount float64) (bool, error)
+}
+
+// TripActuator defines the specific trip operations needed by ingestion
+type TripActuator interface {
+	CreateTrip(ctx context.Context, trip *tripDomain.Trip) (*tripDomain.Trip, error)
+}
+
 // IngestionHandler receives events from the SDK and routes them to appropriate modules.
 type IngestionHandler struct {
-	customerSvc *customerService.CustomerService
-	tripSvc     *tripService.TripService
+	customerOps  CustomerActuator
+	tripOps      TripActuator
+	ingestionSvc ingestionService.IngestionService
 }
 
 // NewIngestionHandler creates a new IngestionHandler.
 func NewIngestionHandler(
-	customerSvc *customerService.CustomerService,
-	tripSvc *tripService.TripService,
+	customerOps CustomerActuator,
+	tripOps TripActuator,
+	ingestionSvc ingestionService.IngestionService,
 ) *IngestionHandler {
 	return &IngestionHandler{
-		customerSvc: customerSvc,
-		tripSvc:     tripSvc,
+		customerOps:  customerOps,
+		tripOps:      tripOps,
+		ingestionSvc: ingestionSvc,
 	}
 }
 
@@ -75,25 +88,25 @@ func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uuid.UUID, req 
 	keyType := middleware.GetKeyType(c)
 
 	// First, ensure customer exists (upsert)
-	customer, err := h.ensureCustomer(ctx, tenantID, req)
-	if err != nil {
-		return nil, err
-	}
+	// customer, err := h.ensureCustomer(ctx, tenantID, req)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	log.Printf("Customer found: %v", customer)
+	// log.Printf("Customer found: %v", customer)
 
 	// Record the event in timeline
 	eventData := datatypes.JSON(req.Data)
-	event := &customerDomain.EventLog{
+	event := &ingestionDomain.EventLog{
 		TenantID:  tenantID,
-		UserID:    customer.ID,
+		UserID:    req.ExternalUserID,
 		UserType:  req.UserType,
 		EventType: req.EventType,
 		EventData: eventData,
 		Source:    "sdk_" + keyType,
 		EventTime: timeOrNow(req.Timestamp),
 	}
-	_ = h.customerSvc.RecordEvent(ctx, event)
+	_ = h.ingestionSvc.RecordEvent(ctx, event)
 
 	// Route to specific module based on event type
 	// switch req.EventType {
@@ -158,7 +171,7 @@ func (h *IngestionHandler) ensureCustomer(ctx context.Context, tenantID uuid.UUI
 		customer.AppInstalledAt = &now
 	}
 
-	return h.customerSvc.UpsertCustomer(ctx, customer)
+	return h.customerOps.UpsertCustomer(ctx, customer)
 }
 
 func (h *IngestionHandler) handleUserEvent(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
@@ -196,7 +209,7 @@ func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uuid.U
 	}
 
 	// trip_number is NOT assigned at booking — only on completion
-	created, err := h.tripSvc.CreateTrip(ctx, trip)
+	created, err := h.tripOps.CreateTrip(ctx, trip)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +232,7 @@ func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uui
 	}
 
 	// Update customer stats
-	luxuryUpgraded, _ := h.customerSvc.IncrementTrip(ctx, tenantID, customer.ID, amount)
+	luxuryUpgraded, _ := h.customerOps.IncrementTrip(ctx, tenantID, customer.ID, amount)
 
 	// If external trip ID provided, create/update the trip record
 	if extID, ok := data["external_trip_id"].(string); ok && extID != "" {
@@ -233,7 +246,7 @@ func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uui
 		}
 		now := time.Now()
 		trip.CompletedAt = &now
-		created, err := h.tripSvc.CreateTrip(ctx, trip)
+		created, err := h.tripOps.CreateTrip(ctx, trip)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +281,7 @@ func (h *IngestionHandler) handleTripCancelled(ctx context.Context, tenantID uui
 		if v, ok := data["cancel_reason"].(string); ok {
 			trip.CancelReason = v
 		}
-		created, err := h.tripSvc.CreateTrip(ctx, trip)
+		created, err := h.tripOps.CreateTrip(ctx, trip)
 		if err != nil {
 			return nil, err
 		}

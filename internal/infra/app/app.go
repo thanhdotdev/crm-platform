@@ -37,7 +37,10 @@ import (
 	customerService "github.com/vothanh/crm-platform/internal/modules/customer/service"
 
 	// Ingestion
+	ingestionDomain "github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
 	ingestionHandler "github.com/vothanh/crm-platform/internal/modules/ingestion/handler"
+	ingestionRepo "github.com/vothanh/crm-platform/internal/modules/ingestion/repository"
+	ingestionService "github.com/vothanh/crm-platform/internal/modules/ingestion/service"
 
 	// Notification
 	notificationDomain "github.com/vothanh/crm-platform/internal/modules/notification/domain"
@@ -146,7 +149,7 @@ func (a *App) migrate() error {
 		&tenantDomain.Tenant{},
 		&tenantDomain.APIKey{},
 		&customerDomain.Customer{},
-		&customerDomain.EventLog{},
+		&ingestionDomain.EventLog{},
 		&tripDomain.Trip{},
 		// Phase 2
 		&segmentationDomain.Segment{},
@@ -179,7 +182,7 @@ func (a *App) setupModules(api *gin.RouterGroup) {
 	tenantRepository := tenantRepo.NewTenantPostgresRepo(a.db)
 	apiKeyRepository := tenantRepo.NewAPIKeyPostgresRepo(a.db)
 	customerRepository := customerRepo.NewCustomerPostgresRepo(a.db)
-	customerEventRepository := customerRepo.NewCustomerEventPostgresRepo(a.db)
+	eventRepository := ingestionRepo.NewEventPostgresRepo(a.db)
 	tripRepository := tripRepo.NewTripPostgresRepo(a.db)
 	segmentRepository := segmentationRepo.NewSegmentPostgresRepo(a.db)
 	customerSegmentRepository := segmentationRepo.NewCustomerSegmentPostgresRepo(a.db)
@@ -192,11 +195,12 @@ func (a *App) setupModules(api *gin.RouterGroup) {
 
 	// Initialize Services
 	tenantSvc := tenantService.NewTenantService(tenantRepository, apiKeyRepository)
-	customerSvc := customerService.NewCustomerService(customerRepository, customerEventRepository)
+	customerSvc := customerService.NewCustomerService(customerRepository)
 	tripSvc := tripService.NewTripService(tripRepository)
 	segmentationSvc := segmentationService.NewSegmentationService(segmentRepository, customerSegmentRepository)
 	campaignSvc := campaignService.NewCampaignService(campaignRepository, voucherRepository, voucherUsageRepository)
 	automationSvc := automationService.NewAutomationService(automationRuleRepository, automationLogRepository)
+	ingestionSvc := ingestionService.NewIngestionService(eventRepository)
 
 	// Mock notification providers (Phase 1)
 	providers := []notificationDomain.NotificationProvider{
@@ -209,9 +213,9 @@ func (a *App) setupModules(api *gin.RouterGroup) {
 
 	// Initialize Handlers
 	tenantH := tenantHandler.NewTenantHandler(tenantSvc)
-	customerH := customerHandler.NewCustomerHandler(customerSvc)
+	customerH := customerHandler.NewCustomerHandler(customerSvc, eventRepository)
 	tripH := tripHandler.NewTripHandler(tripSvc)
-	ingestionH := ingestionHandler.NewIngestionHandler(customerSvc, tripSvc)
+	ingestionH := ingestionHandler.NewIngestionHandler(customerSvc, tripSvc, ingestionSvc)
 	segmentationH := segmentationHandler.NewSegmentationHandler(segmentationSvc)
 	campaignH := campaignHandler.NewCampaignHandler(campaignSvc)
 	automationH := automationHandler.NewAutomationHandler(automationSvc)

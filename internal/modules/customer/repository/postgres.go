@@ -15,7 +15,7 @@ type customerPostgresRepo struct {
 }
 
 // NewCustomerPostgresRepo creates a new GORM-backed CustomerRepository.
-func NewCustomerPostgresRepo(db *gorm.DB) CustomerRepository {
+func NewCustomerPostgresRepo(db *gorm.DB) domain.CustomerRepository {
 	return &customerPostgresRepo{db: db}
 }
 
@@ -97,30 +97,4 @@ func (r *customerPostgresRepo) CountByLifecycle(ctx context.Context, tenantID uu
 		m[r.LifecycleStage] = r.Count
 	}
 	return m, nil
-}
-
-// customerEventPostgresRepo implements CustomerEventRepository.
-type customerEventPostgresRepo struct {
-	db *gorm.DB
-}
-
-// NewCustomerEventPostgresRepo creates a new GORM-backed CustomerEventRepository.
-func NewCustomerEventPostgresRepo(db *gorm.DB) CustomerEventRepository {
-	return &customerEventPostgresRepo{db: db}
-}
-
-func (r *customerEventPostgresRepo) Create(ctx context.Context, event *domain.EventLog) error {
-	return r.db.WithContext(ctx).Create(event).Error
-}
-
-func (r *customerEventPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error) {
-	var events []domain.EventLog
-	var total int64
-
-	base := r.db.WithContext(ctx).Model(&domain.EventLog{}).Where("tenant_id = ? AND user_id = ?", tenantID, customerID)
-	if err := base.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-	err := base.Offset(offset).Limit(limit).Order("event_time DESC").Find(&events).Error
-	return events, total, err
 }
