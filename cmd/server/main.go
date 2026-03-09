@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/vothanh/crm-platform/internal/app"
-	"github.com/vothanh/crm-platform/internal/config"
+	"github.com/vothanh/crm-platform/internal/infra/app"
+	"github.com/vothanh/crm-platform/internal/infra/config"
 	"gitlab.com/bship1/bship-common-go.git/pkg/zserver"
 )
 
