@@ -1,0 +1,3 @@
+{"L":"INFO","timestamp":"2026-03-09T21:46:21+07:00","C":"zlog/logger.go:216","M":"Initializing services"}
+{"L":"INFO","timestamp":"2026-03-09T21:47:22+07:00","C":"zlog/logger.go:216","M":"Initializing services"}
+{"L":"INFO","timestamp":"2026-03-09T21:47:24+07:00","C":"zlog/logger.go:216","M":"ZProfiler stats server starting","port":60000,"url":"http://localhost:60000/stats"}
