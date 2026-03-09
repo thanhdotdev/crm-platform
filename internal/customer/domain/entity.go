@@ -85,7 +85,7 @@ func (c *Customer) CheckLuxuryEligibility() bool {
 type CustomerEvent struct {
 	ID         uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
 	TenantID   uuid.UUID      `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	CustomerID uuid.UUID      `gorm:"type:uuid;index;not null" json:"customer_id"`
+	CustomerID *uuid.UUID     `gorm:"type:uuid;index" json:"customer_id"`
 	EventType  string         `gorm:"not null" json:"event_type"`
 	EventData  datatypes.JSON `gorm:"type:jsonb" json:"event_data,omitempty"`
 	Source     string         `json:"source"` // "sdk", "api", "internal"

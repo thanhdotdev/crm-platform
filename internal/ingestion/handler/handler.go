@@ -36,7 +36,6 @@ func NewIngestionHandler(
 // RegisterRoutes registers ingestion routes (protected by API key auth).
 func (h *IngestionHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	rg.POST("/ingest/events", h.IngestEvent)
-	rg.POST("/ingest/events/batch", h.IngestBatch)
 }
 
 // ingestRequest represents a single event from the SDK.
@@ -70,87 +69,53 @@ func (h *IngestionHandler) IngestEvent(c *gin.Context) {
 	response.Created(c, result)
 }
 
-// ingestBatchRequest represents a batch of events.
-type ingestBatchRequest struct {
-	Events []ingestRequest `json:"events" binding:"required,min=1,max=100"`
-}
-
-// IngestBatch handles POST /api/v1/ingest/events/batch — batch events.
-func (h *IngestionHandler) IngestBatch(c *gin.Context) {
-	tenantID, ok := middleware.GetTenantID(c)
-	if !ok {
-		response.Unauthorized(c, "tenant not resolved")
-		return
-	}
-
-	var req ingestBatchRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-
-	results := make([]map[string]interface{}, 0, len(req.Events))
-	for _, event := range req.Events {
-		result, err := h.processEvent(c, tenantID, &event)
-		if err != nil {
-			results = append(results, map[string]interface{}{
-				"event_type": event.EventType,
-				"status":     "error",
-				"error":      err.Error(),
-			})
-			continue
-		}
-		results = append(results, map[string]interface{}{
-			"event_type": event.EventType,
-			"status":     "ok",
-			"data":       result,
-		})
-	}
-
-	response.Created(c, results)
-}
-
 // processEvent routes the event to the appropriate module.
 func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uuid.UUID, req *ingestRequest) (interface{}, error) {
 	ctx := c.Request.Context()
 	keyType := middleware.GetKeyType(c)
 
 	// First, ensure customer exists (upsert)
-	customer, err := h.ensureCustomer(ctx, tenantID, req)
-	if err != nil {
-		return nil, err
-	}
+	// customer, err := h.ensureCustomer(ctx, tenantID, req)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Record the event in timeline
 	eventData := datatypes.JSON(req.Data)
 	event := &customerDomain.CustomerEvent{
-		TenantID:   tenantID,
-		CustomerID: customer.ID,
-		EventType:  req.EventType,
-		EventData:  eventData,
-		Source:     "sdk_" + keyType,
-		CreatedAt:  timeOrNow(req.Timestamp),
+		TenantID: tenantID,
+		// CustomerID: customer.ID,
+		EventType: req.EventType,
+		EventData: eventData,
+		Source:    "sdk_" + keyType,
+		CreatedAt: timeOrNow(req.Timestamp),
 	}
 	_ = h.customerSvc.RecordEvent(ctx, event)
 
 	// Route to specific module based on event type
-	switch req.EventType {
-	case "user_registered", "app_installed":
-		return h.handleUserEvent(ctx, tenantID, customer, req)
-	case "trip_booked":
-		return h.handleTripBooked(ctx, tenantID, customer, req)
-	case "trip_completed":
-		return h.handleTripCompleted(ctx, tenantID, customer, req)
-	case "trip_cancelled":
-		return h.handleTripCancelled(ctx, tenantID, customer, req)
-	default:
-		// Behavioral events (app_opened, button_clicked, etc.) — just recorded above
-		return map[string]interface{}{
-			"customer_id": customer.ID,
-			"event_type":  req.EventType,
-			"recorded":    true,
-		}, nil
-	}
+	// switch req.EventType {
+	// case "user_registered", "app_installed":
+	// 	return h.handleUserEvent(ctx, tenantID, customer, req)
+	// case "trip_booked":
+	// 	return h.handleTripBooked(ctx, tenantID, customer, req)
+	// case "trip_completed":
+	// 	return h.handleTripCompleted(ctx, tenantID, customer, req)
+	// case "trip_cancelled":
+	// 	return h.handleTripCancelled(ctx, tenantID, customer, req)
+	// default:
+	// 	// Behavioral events (app_opened, button_clicked, etc.) — just recorded above
+	// 	return map[string]interface{}{
+	// 		"customer_id": customer.ID,
+	// 		"event_type":  req.EventType,
+	// 		"recorded":    true,
+	// 	}, nil
+	// }
+
+	return map[string]interface{}{
+		"customer_id": nil,
+		"event_type":  req.EventType,
+		"recorded":    true,
+	}, nil
 }
 
 // ensureCustomer finds or creates a customer from the event.

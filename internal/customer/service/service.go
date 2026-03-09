@@ -80,21 +80,21 @@ func (s *CustomerService) RecordEvent(ctx context.Context, event *domain.Custome
 		return apperror.Wrap("DB_ERROR", "failed to record event", err)
 	}
 
-	scoreIncrement := getScoreForEvent(event.EventType)
-	if scoreIncrement != 0 {
-		customer, err := s.customerRepo.GetByID(ctx, event.TenantID, event.CustomerID)
-		if err != nil || customer == nil {
-			return nil
-		}
-		customer.LeadScore += scoreIncrement
-		if customer.LeadScore < 0 {
-			customer.LeadScore = 0
-		}
-		if customer.LeadScore > 100 {
-			customer.LeadScore = 100
-		}
-		_ = s.customerRepo.Update(ctx, customer)
-	}
+	// scoreIncrement := getScoreForEvent(event.EventType)
+	// if scoreIncrement != 0 && event.CustomerID != nil {
+	// 	customer, err := s.customerRepo.GetByID(ctx, event.TenantID, *event.CustomerID)
+	// 	if err != nil || customer == nil {
+	// 		return nil
+	// 	}
+	// 	customer.LeadScore += scoreIncrement
+	// 	if customer.LeadScore < 0 {
+	// 		customer.LeadScore = 0
+	// 	}
+	// 	if customer.LeadScore > 100 {
+	// 		customer.LeadScore = 100
+	// 	}
+	// 	_ = s.customerRepo.Update(ctx, customer)
+	// }
 
 	return nil
 }

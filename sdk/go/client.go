@@ -75,45 +75,6 @@ func (c *Client) Track(ctx context.Context, event Event) error {
 	return nil
 }
 
-// TrackBatch sends multiple events in a single request.
-func (c *Client) TrackBatch(ctx context.Context, events []Event) error {
-	payloads := make([]eventPayload, len(events))
-	for i, e := range events {
-		payloads[i] = eventPayload{
-			EventType:      e.EventType(),
-			ExternalUserID: e.UserID(),
-			Data:           e,
-			Timestamp:      time.Now(),
-		}
-	}
-
-	body, err := json.Marshal(map[string]interface{}{"events": payloads})
-	if err != nil {
-		return fmt.Errorf("crmsdk: failed to marshal batch: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.endpoint+"/api/v1/ingest/events/batch", bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("crmsdk: failed to create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-API-Key", c.apiKey)
-
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return fmt.Errorf("crmsdk: batch request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("crmsdk: server returned %d", resp.StatusCode)
-	}
-
-	return nil
-}
-
 // eventPayload is the JSON body sent to the Ingestion API.
 type eventPayload struct {
 	EventType      string    `json:"event_type"`
