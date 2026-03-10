@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
 	"github.com/vothanh/crm-platform/pkg/response"
 	"gorm.io/gorm"
@@ -234,9 +234,9 @@ func (h *AnalyticsHandler) CampaignROI(c *gin.Context) {
 	var args []interface{}
 	args = append(args, tenantID)
 	if cid := c.Query("campaign_id"); cid != "" {
-		if uid, err := uuid.Parse(cid); err == nil {
+		if id, err := strconv.ParseUint(cid, 10, 64); err == nil {
 			campaignFilter = " AND v.campaign_id = ?"
-			args = append(args, uid)
+			args = append(args, id)
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/automation/domain"
 	"github.com/vothanh/crm-platform/internal/modules/automation/repository"
 	"github.com/vothanh/crm-platform/pkg/apperror"
@@ -32,12 +31,12 @@ func (s *AutomationService) CreateRule(ctx context.Context, rule *domain.Automat
 }
 
 // ListRules returns all automation rules for a tenant.
-func (s *AutomationService) ListRules(ctx context.Context, tenantID uuid.UUID) ([]domain.AutomationRule, error) {
+func (s *AutomationService) ListRules(ctx context.Context, tenantID uint64) ([]domain.AutomationRule, error) {
 	return s.ruleRepo.List(ctx, tenantID)
 }
 
 // GetRule returns a rule by ID (tenant-scoped).
-func (s *AutomationService) GetRule(ctx context.Context, tenantID, id uuid.UUID) (*domain.AutomationRule, error) {
+func (s *AutomationService) GetRule(ctx context.Context, tenantID, id uint64) (*domain.AutomationRule, error) {
 	rule, err := s.ruleRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch rule", err)
@@ -58,13 +57,13 @@ func (s *AutomationService) UpdateRule(ctx context.Context, rule *domain.Automat
 
 // EvaluateEvent checks if any automation rules match the given event and executes them.
 // Returns the list of triggered rule IDs.
-func (s *AutomationService) EvaluateEvent(ctx context.Context, tenantID uuid.UUID, eventType string, customerID uuid.UUID) ([]uuid.UUID, error) {
+func (s *AutomationService) EvaluateEvent(ctx context.Context, tenantID uint64, eventType string, customerID uint64) ([]uint64, error) {
 	rules, err := s.ruleRepo.ListByTrigger(ctx, tenantID, "event", eventType)
 	if err != nil {
 		return nil, err
 	}
 
-	var triggeredIDs []uuid.UUID
+	var triggeredIDs []uint64
 	for _, rule := range rules {
 		status := "executed"
 		if rule.ExecutionMode == "manual" {
@@ -86,6 +85,6 @@ func (s *AutomationService) EvaluateEvent(ctx context.Context, tenantID uuid.UUI
 }
 
 // ListLogs returns automation logs for a rule.
-func (s *AutomationService) ListLogs(ctx context.Context, tenantID, ruleID uuid.UUID, offset, limit int) ([]domain.AutomationLog, int64, error) {
+func (s *AutomationService) ListLogs(ctx context.Context, tenantID, ruleID uint64, offset, limit int) ([]domain.AutomationLog, int64, error) {
 	return s.logRepo.ListByRuleID(ctx, tenantID, ruleID, offset, limit)
 }

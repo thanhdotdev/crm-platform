@@ -39,12 +39,12 @@ func (s *CampaignService) CreateCampaign(ctx context.Context, c *domain.Campaign
 }
 
 // ListCampaigns returns paginated campaigns for a tenant.
-func (s *CampaignService) ListCampaigns(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Campaign, int64, error) {
+func (s *CampaignService) ListCampaigns(ctx context.Context, tenantID uint64, offset, limit int) ([]domain.Campaign, int64, error) {
 	return s.campaignRepo.List(ctx, tenantID, offset, limit)
 }
 
 // GetCampaign returns a campaign by ID.
-func (s *CampaignService) GetCampaign(ctx context.Context, tenantID, id uuid.UUID) (*domain.Campaign, error) {
+func (s *CampaignService) GetCampaign(ctx context.Context, tenantID, id uint64) (*domain.Campaign, error) {
 	c, err := s.campaignRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch campaign", err)
@@ -56,7 +56,7 @@ func (s *CampaignService) GetCampaign(ctx context.Context, tenantID, id uuid.UUI
 }
 
 // GeneratePolicy50_30_20Voucher creates vouchers based on the 50-30-20 policy.
-func (s *CampaignService) GeneratePolicy50_30_20Voucher(ctx context.Context, tenantID, campaignID, customerID uuid.UUID, tripNumber int) (*domain.Voucher, error) {
+func (s *CampaignService) GeneratePolicy50_30_20Voucher(ctx context.Context, tenantID, campaignID, customerID uint64, tripNumber int) (*domain.Voucher, error) {
 	discountValue, expiryHours := domain.Policy50_30_20(tripNumber)
 	if discountValue == 0 {
 		return nil, nil // No voucher for this trip number
@@ -84,7 +84,7 @@ func (s *CampaignService) GeneratePolicy50_30_20Voucher(ctx context.Context, ten
 }
 
 // RedeemVoucher validates and uses a voucher.
-func (s *CampaignService) RedeemVoucher(ctx context.Context, tenantID uuid.UUID, code string, customerID, tripID uuid.UUID) (*domain.Voucher, error) {
+func (s *CampaignService) RedeemVoucher(ctx context.Context, tenantID uint64, code string, customerID, tripID uint64) (*domain.Voucher, error) {
 	voucher, err := s.voucherRepo.GetByCode(ctx, tenantID, code)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to lookup voucher", err)
@@ -126,6 +126,6 @@ func (s *CampaignService) RedeemVoucher(ctx context.Context, tenantID uuid.UUID,
 }
 
 // ListVouchers returns all vouchers for a campaign.
-func (s *CampaignService) ListVouchers(ctx context.Context, tenantID, campaignID uuid.UUID) ([]domain.Voucher, error) {
+func (s *CampaignService) ListVouchers(ctx context.Context, tenantID, campaignID uint64) ([]domain.Voucher, error) {
 	return s.voucherRepo.ListByCampaignID(ctx, tenantID, campaignID)
 }

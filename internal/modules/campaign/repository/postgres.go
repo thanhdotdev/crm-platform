@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/campaign/domain"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ func (r *campaignPostgresRepo) Create(ctx context.Context, c *domain.Campaign) e
 	return r.db.WithContext(ctx).Create(c).Error
 }
 
-func (r *campaignPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Campaign, error) {
+func (r *campaignPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Campaign, error) {
 	var campaign domain.Campaign
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&campaign).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -28,7 +27,7 @@ func (r *campaignPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UU
 	return &campaign, err
 }
 
-func (r *campaignPostgresRepo) List(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Campaign, int64, error) {
+func (r *campaignPostgresRepo) List(ctx context.Context, tenantID uint64, offset, limit int) ([]domain.Campaign, int64, error) {
 	var campaigns []domain.Campaign
 	var total int64
 	base := r.db.WithContext(ctx).Model(&domain.Campaign{}).Where("tenant_id = ?", tenantID)
@@ -51,7 +50,7 @@ func (r *voucherPostgresRepo) Create(ctx context.Context, v *domain.Voucher) err
 	return r.db.WithContext(ctx).Create(v).Error
 }
 
-func (r *voucherPostgresRepo) GetByCode(ctx context.Context, tenantID uuid.UUID, code string) (*domain.Voucher, error) {
+func (r *voucherPostgresRepo) GetByCode(ctx context.Context, tenantID uint64, code string) (*domain.Voucher, error) {
 	var voucher domain.Voucher
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND code = ?", tenantID, code).First(&voucher).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -60,7 +59,7 @@ func (r *voucherPostgresRepo) GetByCode(ctx context.Context, tenantID uuid.UUID,
 	return &voucher, err
 }
 
-func (r *voucherPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Voucher, error) {
+func (r *voucherPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Voucher, error) {
 	var voucher domain.Voucher
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&voucher).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -69,13 +68,13 @@ func (r *voucherPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUI
 	return &voucher, err
 }
 
-func (r *voucherPostgresRepo) ListByCampaignID(ctx context.Context, tenantID, campaignID uuid.UUID) ([]domain.Voucher, error) {
+func (r *voucherPostgresRepo) ListByCampaignID(ctx context.Context, tenantID, campaignID uint64) ([]domain.Voucher, error) {
 	var vouchers []domain.Voucher
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND campaign_id = ?", tenantID, campaignID).Find(&vouchers).Error
 	return vouchers, err
 }
 
-func (r *voucherPostgresRepo) IncrementUsedCount(ctx context.Context, id uuid.UUID) error {
+func (r *voucherPostgresRepo) IncrementUsedCount(ctx context.Context, id uint64) error {
 	return r.db.WithContext(ctx).Model(&domain.Voucher{}).Where("id = ?", id).
 		Update("used_count", gorm.Expr("used_count + 1")).Error
 }
@@ -90,7 +89,7 @@ func (r *voucherUsagePostgresRepo) Create(ctx context.Context, vu *domain.Vouche
 	return r.db.WithContext(ctx).Create(vu).Error
 }
 
-func (r *voucherUsagePostgresRepo) CountByCustomerAndVoucher(ctx context.Context, customerID, voucherID uuid.UUID) (int64, error) {
+func (r *voucherUsagePostgresRepo) CountByCustomerAndVoucher(ctx context.Context, customerID, voucherID uint64) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&domain.VoucherUsage{}).
 		Where("customer_id = ? AND voucher_id = ?", customerID, voucherID).Count(&count).Error

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/google/uuid"
 	customerDomain "github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	"github.com/vothanh/crm-platform/internal/modules/segmentation/domain"
 	"github.com/vothanh/crm-platform/internal/modules/segmentation/repository"
@@ -35,12 +34,12 @@ func (s *SegmentationService) CreateSegment(ctx context.Context, segment *domain
 }
 
 // ListSegments returns all segments for a tenant.
-func (s *SegmentationService) ListSegments(ctx context.Context, tenantID uuid.UUID) ([]domain.Segment, error) {
+func (s *SegmentationService) ListSegments(ctx context.Context, tenantID uint64) ([]domain.Segment, error) {
 	return s.segmentRepo.List(ctx, tenantID)
 }
 
 // GetSegment returns a segment by ID (tenant-scoped).
-func (s *SegmentationService) GetSegment(ctx context.Context, tenantID, id uuid.UUID) (*domain.Segment, error) {
+func (s *SegmentationService) GetSegment(ctx context.Context, tenantID, id uint64) (*domain.Segment, error) {
 	seg, err := s.segmentRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch segment", err)
@@ -60,13 +59,13 @@ func (s *SegmentationService) UpdateSegment(ctx context.Context, segment *domain
 }
 
 // EvaluateCustomer checks if a customer matches a segment's rules and assigns them.
-func (s *SegmentationService) EvaluateCustomer(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer) ([]uuid.UUID, error) {
+func (s *SegmentationService) EvaluateCustomer(ctx context.Context, tenantID uint64, customer *customerDomain.Customer) ([]uint64, error) {
 	segments, err := s.segmentRepo.List(ctx, tenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	var matchedSegmentIDs []uuid.UUID
+	var matchedSegmentIDs []uint64
 	for _, seg := range segments {
 		if !seg.IsActive {
 			continue
@@ -88,7 +87,7 @@ func (s *SegmentationService) EvaluateCustomer(ctx context.Context, tenantID uui
 }
 
 // GetSegmentCount returns the number of customers in a segment.
-func (s *SegmentationService) GetSegmentCount(ctx context.Context, tenantID, segmentID uuid.UUID) (int64, error) {
+func (s *SegmentationService) GetSegmentCount(ctx context.Context, tenantID, segmentID uint64) (int64, error) {
 	return s.csRepo.CountBySegmentID(ctx, tenantID, segmentID)
 }
 

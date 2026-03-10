@@ -3,15 +3,13 @@ package middleware
 import (
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const apiKeyCacheTTL = 5 * time.Minute
 
 // cachedKeyEntry holds cached API key lookup result.
 type cachedKeyEntry struct {
-	TenantID uuid.UUID
+	TenantID uint64
 	KeyType  string
 	CachedAt time.Time
 }
@@ -42,7 +40,7 @@ func (c *APIKeyCache) Get(keyHash string) *cachedKeyEntry {
 }
 
 // Set stores an API key entry in the cache.
-func (c *APIKeyCache) Set(keyHash string, tenantID uuid.UUID, keyType string) {
+func (c *APIKeyCache) Set(keyHash string, tenantID uint64, keyType string) {
 	c.store.Store(keyHash, cachedKeyEntry{
 		TenantID: tenantID,
 		KeyType:  keyType,

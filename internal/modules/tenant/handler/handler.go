@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/tenant/service"
 	"github.com/vothanh/crm-platform/pkg/pagination"
 	"github.com/vothanh/crm-platform/pkg/response"
@@ -62,7 +62,7 @@ func (h *TenantHandler) Create(c *gin.Context) {
 
 // Get handles GET /api/v1/tenants/:id
 func (h *TenantHandler) Get(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid tenant ID")
 		return
@@ -103,7 +103,7 @@ type updateTenantRequest struct {
 
 // Update handles PATCH /api/v1/tenants/:id
 func (h *TenantHandler) Update(c *gin.Context) {
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid tenant ID")
 		return
@@ -132,7 +132,7 @@ type createAPIKeyRequest struct {
 
 // CreateAPIKey handles POST /api/v1/tenants/:id/api-keys
 func (h *TenantHandler) CreateAPIKey(c *gin.Context) {
-	tenantID, err := uuid.Parse(c.Param("id"))
+	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid tenant ID")
 		return
@@ -155,7 +155,7 @@ func (h *TenantHandler) CreateAPIKey(c *gin.Context) {
 
 // ListAPIKeys handles GET /api/v1/tenants/:id/api-keys
 func (h *TenantHandler) ListAPIKeys(c *gin.Context) {
-	tenantID, err := uuid.Parse(c.Param("id"))
+	tenantID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid tenant ID")
 		return

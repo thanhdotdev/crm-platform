@@ -82,9 +82,9 @@ func NewAppWithDependencies(
 		db:  db,
 	}
 
-	if err := app.migrate(); err != nil {
-		return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
-	}
+	// if err := app.migrate(); err != nil {
+	// 	return nil, fmt.Errorf("failed to auto-migrate database: %w", err)
+	// }
 
 	app.router = gin.Default()
 	app.router.Use(middleware.CORS())

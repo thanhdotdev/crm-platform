@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/notification/domain"
 	"github.com/vothanh/crm-platform/internal/modules/notification/repository"
 	"github.com/vothanh/crm-platform/pkg/apperror"
@@ -55,7 +54,7 @@ func (s *NotificationService) Send(ctx context.Context, n *domain.Notification) 
 }
 
 // ListByCustomer returns notifications for a customer.
-func (s *NotificationService) ListByCustomer(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.Notification, int64, error) {
+func (s *NotificationService) ListByCustomer(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]domain.Notification, int64, error) {
 	return s.repo.ListByCustomerID(ctx, tenantID, customerID, offset, limit)
 }
 

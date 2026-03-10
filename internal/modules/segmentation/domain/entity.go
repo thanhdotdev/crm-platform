@@ -3,9 +3,7 @@ package domain
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
 )
 
 // SegmentType classifies how a segment is defined.
@@ -20,8 +18,8 @@ const (
 
 // Segment represents a customer grouping rule.
 type Segment struct {
-	ID          uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID    uuid.UUID      `gorm:"type:uuid;index;not null" json:"tenant_id"`
+	ID          uint64         `gorm:"primaryKey" json:"id"`
+	TenantID    uint64         `gorm:"index;not null" json:"tenant_id"`
 	Name        string         `gorm:"not null" json:"name"`
 	Type        SegmentType    `json:"type"`
 	Rules       datatypes.JSON `gorm:"type:jsonb" json:"rules"`
@@ -32,28 +30,14 @@ type Segment struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
-func (s *Segment) BeforeCreate(tx *gorm.DB) error {
-	if s.ID == uuid.Nil {
-		s.ID = uuid.New()
-	}
-	return nil
-}
-
 // CustomerSegment maps customers to segments.
 type CustomerSegment struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID   uuid.UUID `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	CustomerID uuid.UUID `gorm:"type:uuid;index;not null" json:"customer_id"`
-	SegmentID  uuid.UUID `gorm:"type:uuid;index;not null" json:"segment_id"`
+	ID         uint64    `gorm:"primaryKey" json:"id"`
+	TenantID   uint64    `gorm:"index;not null" json:"tenant_id"`
+	CustomerID uint64    `gorm:"index;not null" json:"customer_id"`
+	SegmentID  uint64    `gorm:"index;not null" json:"segment_id"`
 	Score      int       `json:"score"`
 	AssignedAt time.Time `json:"assigned_at"`
-}
-
-func (cs *CustomerSegment) BeforeCreate(tx *gorm.DB) error {
-	if cs.ID == uuid.Nil {
-		cs.ID = uuid.New()
-	}
-	return nil
 }
 
 // SegmentRules defines the JSON structure for segment evaluation.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/notification/domain"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ func (r *notificationPostgresRepo) Create(ctx context.Context, n *domain.Notific
 	return r.db.WithContext(ctx).Create(n).Error
 }
 
-func (r *notificationPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Notification, error) {
+func (r *notificationPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Notification, error) {
 	var n domain.Notification
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&n).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -28,7 +27,7 @@ func (r *notificationPostgresRepo) GetByID(ctx context.Context, tenantID, id uui
 	return &n, err
 }
 
-func (r *notificationPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.Notification, int64, error) {
+func (r *notificationPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]domain.Notification, int64, error) {
 	var notifications []domain.Notification
 	var total int64
 	base := r.db.WithContext(ctx).Model(&domain.Notification{}).Where("tenant_id = ? AND customer_id = ?", tenantID, customerID)
@@ -37,6 +36,6 @@ func (r *notificationPostgresRepo) ListByCustomerID(ctx context.Context, tenantI
 	return notifications, total, err
 }
 
-func (r *notificationPostgresRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
+func (r *notificationPostgresRepo) UpdateStatus(ctx context.Context, id uint64, status string) error {
 	return r.db.WithContext(ctx).Model(&domain.Notification{}).Where("id = ?", id).Update("status", status).Error
 }

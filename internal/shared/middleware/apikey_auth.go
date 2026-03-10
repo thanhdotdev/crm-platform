@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/pkg/response"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ const (
 
 // apiKeyRecord represents the database row for API key lookup.
 type apiKeyRecord struct {
-	TenantID uuid.UUID
+	TenantID uint64
 	KeyType  string
 	IsActive bool
 }
@@ -100,12 +99,12 @@ func APIKeyAuth(db *gorm.DB, cache *APIKeyCache) gin.HandlerFunc {
 }
 
 // GetTenantID extracts the TenantID from gin.Context.
-func GetTenantID(c *gin.Context) (uuid.UUID, bool) {
+func GetTenantID(c *gin.Context) (uint64, bool) {
 	val, exists := c.Get(ContextKeyTenantID)
 	if !exists {
-		return uuid.Nil, false
+		return 0, false
 	}
-	id, ok := val.(uuid.UUID)
+	id, ok := val.(uint64)
 	return id, ok
 }
 

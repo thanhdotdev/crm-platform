@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -23,7 +22,7 @@ func (r *customerPostgresRepo) Create(ctx context.Context, customer *domain.Cust
 	return r.db.WithContext(ctx).Create(customer).Error
 }
 
-func (r *customerPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Customer, error) {
+func (r *customerPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Customer, error) {
 	var customer domain.Customer
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&customer).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -32,7 +31,7 @@ func (r *customerPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UU
 	return &customer, err
 }
 
-func (r *customerPostgresRepo) GetByExternalID(ctx context.Context, tenantID uuid.UUID, externalID string) (*domain.Customer, error) {
+func (r *customerPostgresRepo) GetByExternalID(ctx context.Context, tenantID uint64, externalID string) (*domain.Customer, error) {
 	var customer domain.Customer
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND external_id = ?", tenantID, externalID).First(&customer).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -41,7 +40,7 @@ func (r *customerPostgresRepo) GetByExternalID(ctx context.Context, tenantID uui
 	return &customer, err
 }
 
-func (r *customerPostgresRepo) GetByPhone(ctx context.Context, tenantID uuid.UUID, phone string) (*domain.Customer, error) {
+func (r *customerPostgresRepo) GetByPhone(ctx context.Context, tenantID uint64, phone string) (*domain.Customer, error) {
 	var customer domain.Customer
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND phone = ?", tenantID, phone).First(&customer).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -64,7 +63,7 @@ func (r *customerPostgresRepo) Update(ctx context.Context, customer *domain.Cust
 	return r.db.WithContext(ctx).Save(customer).Error
 }
 
-func (r *customerPostgresRepo) List(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Customer, int64, error) {
+func (r *customerPostgresRepo) List(ctx context.Context, tenantID uint64, offset, limit int) ([]domain.Customer, int64, error) {
 	var customers []domain.Customer
 	var total int64
 
@@ -76,7 +75,7 @@ func (r *customerPostgresRepo) List(ctx context.Context, tenantID uuid.UUID, off
 	return customers, total, err
 }
 
-func (r *customerPostgresRepo) CountByLifecycle(ctx context.Context, tenantID uuid.UUID) (map[string]int64, error) {
+func (r *customerPostgresRepo) CountByLifecycle(ctx context.Context, tenantID uint64) (map[string]int64, error) {
 	type result struct {
 		LifecycleStage string
 		Count          int64

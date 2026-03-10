@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	"github.com/vothanh/crm-platform/pkg/apperror"
 )
@@ -54,7 +53,7 @@ func (s *customerService) UpsertCustomer(ctx context.Context, customer *domain.C
 }
 
 // GetCustomer retrieves a customer by ID (tenant-scoped).
-func (s *customerService) GetCustomer(ctx context.Context, tenantID, id uuid.UUID) (*domain.Customer, error) {
+func (s *customerService) GetCustomer(ctx context.Context, tenantID, id uint64) (*domain.Customer, error) {
 	customer, err := s.customerRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch customer", err)
@@ -66,13 +65,13 @@ func (s *customerService) GetCustomer(ctx context.Context, tenantID, id uuid.UUI
 }
 
 // ListCustomers returns a paginated list of customers (tenant-scoped).
-func (s *customerService) ListCustomers(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Customer, int64, error) {
+func (s *customerService) ListCustomers(ctx context.Context, tenantID uint64, offset, limit int) ([]domain.Customer, int64, error) {
 	return s.customerRepo.List(ctx, tenantID, offset, limit)
 }
 
 // IncrementTrip updates customer stats when a trip is completed.
 // Returns true if customer was just upgraded to Luxury tier.
-func (s *customerService) IncrementTrip(ctx context.Context, tenantID, customerID uuid.UUID, amount float64) (bool, error) {
+func (s *customerService) IncrementTrip(ctx context.Context, tenantID, customerID uint64, amount float64) (bool, error) {
 	customer, err := s.customerRepo.GetByID(ctx, tenantID, customerID)
 	if err != nil {
 		return false, apperror.Wrap("DB_ERROR", "failed to fetch customer", err)
@@ -100,7 +99,7 @@ func (s *customerService) IncrementTrip(ctx context.Context, tenantID, customerI
 }
 
 // GetLifecycleCounts returns customer counts grouped by lifecycle stage.
-func (s *customerService) GetLifecycleCounts(ctx context.Context, tenantID uuid.UUID) (map[string]int64, error) {
+func (s *customerService) GetLifecycleCounts(ctx context.Context, tenantID uint64) (map[string]int64, error) {
 	return s.customerRepo.CountByLifecycle(ctx, tenantID)
 }
 

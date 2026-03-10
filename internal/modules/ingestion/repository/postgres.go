@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
 	"gorm.io/gorm"
 )
@@ -21,7 +20,7 @@ func (r *eventPostgresRepo) Create(ctx context.Context, event *domain.EventLog) 
 	return r.db.WithContext(ctx).Create(event).Error
 }
 
-func (r *eventPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.EventLog, int64, error) {
+func (r *eventPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]domain.EventLog, int64, error) {
 	var events []domain.EventLog
 	var total int64
 

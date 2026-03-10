@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/trip/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
 	"github.com/vothanh/crm-platform/pkg/pagination"
@@ -38,7 +38,7 @@ func (h *TripHandler) Get(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid trip ID")
 		return
@@ -61,7 +61,7 @@ func (h *TripHandler) ListByCustomer(c *gin.Context) {
 		return
 	}
 
-	customerID, err := uuid.Parse(c.Param("customer_id"))
+	customerID, err := strconv.ParseUint(c.Param("customer_id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid customer ID")
 		return

@@ -44,17 +44,11 @@ func provideEventReader(repo ingestionDomain.EventRepository) customerHandler.Ev
 	return repo
 }
 
-// provideDBConfig extracts the DSN string from the config.
-func provideDBConfig(cfg *config.Config) string {
-	return cfg.Database.DSN()
-}
-
 // InitializeApp sets up the entire application using Google Wire.
 func InitializeApp(cfg *config.Config) (*App, error) {
 	wire.Build(
 		// Infrastructure
-		provideDBConfig,
-		database.NewPostgresDB,
+		database.NewDatabase,
 
 		// Modules
 		tenant.ProviderSet,

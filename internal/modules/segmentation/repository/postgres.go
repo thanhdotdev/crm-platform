@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/segmentation/domain"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ func (r *segmentPostgresRepo) Create(ctx context.Context, s *domain.Segment) err
 	return r.db.WithContext(ctx).Create(s).Error
 }
 
-func (r *segmentPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Segment, error) {
+func (r *segmentPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Segment, error) {
 	var s domain.Segment
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&s).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -28,7 +27,7 @@ func (r *segmentPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUI
 	return &s, err
 }
 
-func (r *segmentPostgresRepo) List(ctx context.Context, tenantID uuid.UUID) ([]domain.Segment, error) {
+func (r *segmentPostgresRepo) List(ctx context.Context, tenantID uint64) ([]domain.Segment, error) {
 	var segments []domain.Segment
 	err := r.db.WithContext(ctx).Where("tenant_id = ?", tenantID).Order("created_at DESC").Find(&segments).Error
 	return segments, err
@@ -38,7 +37,7 @@ func (r *segmentPostgresRepo) Update(ctx context.Context, s *domain.Segment) err
 	return r.db.WithContext(ctx).Save(s).Error
 }
 
-func (r *segmentPostgresRepo) Delete(ctx context.Context, tenantID, id uuid.UUID) error {
+func (r *segmentPostgresRepo) Delete(ctx context.Context, tenantID, id uint64) error {
 	return r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).Delete(&domain.Segment{}).Error
 }
 
@@ -52,19 +51,19 @@ func (r *customerSegmentPostgresRepo) Assign(ctx context.Context, cs *domain.Cus
 	return r.db.WithContext(ctx).Create(cs).Error
 }
 
-func (r *customerSegmentPostgresRepo) Remove(ctx context.Context, tenantID, customerID, segmentID uuid.UUID) error {
+func (r *customerSegmentPostgresRepo) Remove(ctx context.Context, tenantID, customerID, segmentID uint64) error {
 	return r.db.WithContext(ctx).
 		Where("tenant_id = ? AND customer_id = ? AND segment_id = ?", tenantID, customerID, segmentID).
 		Delete(&domain.CustomerSegment{}).Error
 }
 
-func (r *customerSegmentPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID) ([]domain.CustomerSegment, error) {
+func (r *customerSegmentPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uint64) ([]domain.CustomerSegment, error) {
 	var cs []domain.CustomerSegment
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND customer_id = ?", tenantID, customerID).Find(&cs).Error
 	return cs, err
 }
 
-func (r *customerSegmentPostgresRepo) ListBySegmentID(ctx context.Context, tenantID, segmentID uuid.UUID, offset, limit int) ([]domain.CustomerSegment, int64, error) {
+func (r *customerSegmentPostgresRepo) ListBySegmentID(ctx context.Context, tenantID, segmentID uint64, offset, limit int) ([]domain.CustomerSegment, int64, error) {
 	var cs []domain.CustomerSegment
 	var total int64
 	base := r.db.WithContext(ctx).Model(&domain.CustomerSegment{}).Where("tenant_id = ? AND segment_id = ?", tenantID, segmentID)
@@ -73,7 +72,7 @@ func (r *customerSegmentPostgresRepo) ListBySegmentID(ctx context.Context, tenan
 	return cs, total, err
 }
 
-func (r *customerSegmentPostgresRepo) CountBySegmentID(ctx context.Context, tenantID, segmentID uuid.UUID) (int64, error) {
+func (r *customerSegmentPostgresRepo) CountBySegmentID(ctx context.Context, tenantID, segmentID uint64) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&domain.CustomerSegment{}).
 		Where("tenant_id = ? AND segment_id = ?", tenantID, segmentID).Count(&count).Error

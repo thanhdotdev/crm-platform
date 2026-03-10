@@ -1,8 +1,9 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/segmentation/domain"
 	"github.com/vothanh/crm-platform/internal/modules/segmentation/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -92,7 +93,7 @@ func (h *SegmentationHandler) Get(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid segment ID")
 		return
@@ -120,7 +121,7 @@ func (h *SegmentationHandler) Update(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid segment ID")
 		return

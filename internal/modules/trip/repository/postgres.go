@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/trip/domain"
 	"gorm.io/gorm"
 )
@@ -22,7 +21,7 @@ func (r *tripPostgresRepo) Create(ctx context.Context, trip *domain.Trip) error 
 	return r.db.WithContext(ctx).Create(trip).Error
 }
 
-func (r *tripPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) (*domain.Trip, error) {
+func (r *tripPostgresRepo) GetByID(ctx context.Context, tenantID, id uint64) (*domain.Trip, error) {
 	var trip domain.Trip
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND id = ?", tenantID, id).First(&trip).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -31,7 +30,7 @@ func (r *tripPostgresRepo) GetByID(ctx context.Context, tenantID, id uuid.UUID) 
 	return &trip, err
 }
 
-func (r *tripPostgresRepo) GetByExternalID(ctx context.Context, tenantID uuid.UUID, externalTripID string) (*domain.Trip, error) {
+func (r *tripPostgresRepo) GetByExternalID(ctx context.Context, tenantID uint64, externalTripID string) (*domain.Trip, error) {
 	var trip domain.Trip
 	err := r.db.WithContext(ctx).Where("tenant_id = ? AND external_trip_id = ?", tenantID, externalTripID).First(&trip).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -40,7 +39,7 @@ func (r *tripPostgresRepo) GetByExternalID(ctx context.Context, tenantID uuid.UU
 	return &trip, err
 }
 
-func (r *tripPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.Trip, int64, error) {
+func (r *tripPostgresRepo) ListByCustomerID(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]domain.Trip, int64, error) {
 	var trips []domain.Trip
 	var total int64
 
@@ -57,7 +56,7 @@ func (r *tripPostgresRepo) Update(ctx context.Context, trip *domain.Trip) error 
 }
 
 // CountCompletedByCustomerID counts only COMPLETED trips (for lifecycle/tier logic).
-func (r *tripPostgresRepo) CountCompletedByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID) (int64, error) {
+func (r *tripPostgresRepo) CountCompletedByCustomerID(ctx context.Context, tenantID, customerID uint64) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&domain.Trip{}).
 		Where("tenant_id = ? AND customer_id = ? AND status = ?", tenantID, customerID, domain.TripStatusCompleted).

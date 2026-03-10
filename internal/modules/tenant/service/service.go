@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/tenant/domain"
 	"github.com/vothanh/crm-platform/internal/modules/tenant/repository"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -51,7 +50,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, name, slug string) (*d
 }
 
 // GetTenant retrieves a tenant by ID.
-func (s *TenantService) GetTenant(ctx context.Context, id uuid.UUID) (*domain.Tenant, error) {
+func (s *TenantService) GetTenant(ctx context.Context, id uint64) (*domain.Tenant, error) {
 	tenant, err := s.tenantRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch tenant", err)
@@ -68,7 +67,7 @@ func (s *TenantService) ListTenants(ctx context.Context, offset, limit int) ([]d
 }
 
 // UpdateTenant updates a tenant's mutable fields.
-func (s *TenantService) UpdateTenant(ctx context.Context, id uuid.UUID, name string, isActive *bool) (*domain.Tenant, error) {
+func (s *TenantService) UpdateTenant(ctx context.Context, id uint64, name string, isActive *bool) (*domain.Tenant, error) {
 	tenant, err := s.tenantRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch tenant", err)
@@ -98,7 +97,7 @@ type APIKeyWithRaw struct {
 }
 
 // CreateAPIKey generates a new API key for a tenant.
-func (s *TenantService) CreateAPIKey(ctx context.Context, tenantID uuid.UUID, keyType, name string) (*APIKeyWithRaw, error) {
+func (s *TenantService) CreateAPIKey(ctx context.Context, tenantID uint64, keyType, name string) (*APIKeyWithRaw, error) {
 	// Validate tenant exists
 	tenant, err := s.tenantRepo.GetByID(ctx, tenantID)
 	if err != nil {
@@ -141,12 +140,12 @@ func (s *TenantService) CreateAPIKey(ctx context.Context, tenantID uuid.UUID, ke
 }
 
 // ListAPIKeys returns all API keys for a tenant.
-func (s *TenantService) ListAPIKeys(ctx context.Context, tenantID uuid.UUID) ([]domain.APIKey, error) {
+func (s *TenantService) ListAPIKeys(ctx context.Context, tenantID uint64) ([]domain.APIKey, error) {
 	return s.apiKeyRepo.ListByTenantID(ctx, tenantID)
 }
 
 // DeactivateAPIKey disables an API key.
-func (s *TenantService) DeactivateAPIKey(ctx context.Context, keyID uuid.UUID) error {
+func (s *TenantService) DeactivateAPIKey(ctx context.Context, keyID uint64) error {
 	return s.apiKeyRepo.Deactivate(ctx, keyID)
 }
 

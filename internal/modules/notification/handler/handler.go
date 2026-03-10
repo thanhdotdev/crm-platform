@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/notification/domain"
 	"github.com/vothanh/crm-platform/internal/modules/notification/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -30,10 +30,10 @@ func (h *NotificationHandler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 type sendRequest struct {
-	CustomerID uuid.UUID `json:"customer_id" binding:"required"`
-	Channel    string    `json:"channel" binding:"required"`
-	Title      string    `json:"title" binding:"required"`
-	Content    string    `json:"content" binding:"required"`
+	CustomerID uint64 `json:"customer_id" binding:"required"`
+	Channel    string `json:"channel" binding:"required"`
+	Title      string `json:"title" binding:"required"`
+	Content    string `json:"content" binding:"required"`
 }
 
 func (h *NotificationHandler) Send(c *gin.Context) {
@@ -73,7 +73,7 @@ func (h *NotificationHandler) ListByCustomer(c *gin.Context) {
 		return
 	}
 
-	customerID, err := uuid.Parse(c.Param("customer_id"))
+	customerID, err := strconv.ParseUint(c.Param("customer_id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid customer ID")
 		return

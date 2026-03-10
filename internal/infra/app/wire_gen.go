@@ -44,8 +44,7 @@ import (
 
 // InitializeApp sets up the entire application using Google Wire.
 func InitializeApp(cfg *config.Config) (*App, error) {
-	string2 := provideDBConfig(cfg)
-	db, err := database.NewPostgresDB(string2)
+	db, err := database.NewDatabase(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -109,9 +108,4 @@ func provideTripActuator(svc *service3.TripService) handler4.TripActuator {
 
 func provideEventReader(repo domain2.EventRepository) handler2.EventReader {
 	return repo
-}
-
-// provideDBConfig extracts the DSN string from the config.
-func provideDBConfig(cfg *config.Config) string {
-	return cfg.Database.DSN()
 }

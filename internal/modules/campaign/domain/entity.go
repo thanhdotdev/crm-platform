@@ -2,39 +2,29 @@ package domain
 
 import (
 	"time"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 // Campaign represents a marketing campaign.
 type Campaign struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID        uuid.UUID  `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	Name            string     `gorm:"not null" json:"name"`
-	Type            string     `json:"type"`                          // new_user, reactivation, loyalty, luxury_upgrade
-	Status          string     `gorm:"default:'draft'" json:"status"` // draft, active, paused, completed
-	TargetSegmentID *uuid.UUID `gorm:"type:uuid" json:"target_segment_id,omitempty"`
-	Budget          float64    `json:"budget"`
-	StartDate       time.Time  `json:"start_date"`
-	EndDate         time.Time  `json:"end_date"`
-	Description     string     `json:"description,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
-}
-
-func (c *Campaign) BeforeCreate(tx *gorm.DB) error {
-	if c.ID == uuid.Nil {
-		c.ID = uuid.New()
-	}
-	return nil
+	ID              uint64    `gorm:"primaryKey" json:"id"`
+	TenantID        uint64    `gorm:"index;not null" json:"tenant_id"`
+	Name            string    `gorm:"not null" json:"name"`
+	Type            string    `json:"type"`                          // new_user, reactivation, loyalty, luxury_upgrade
+	Status          string    `gorm:"default:'draft'" json:"status"` // draft, active, paused, completed
+	TargetSegmentID *uint64   `json:"target_segment_id,omitempty"`
+	Budget          float64   `json:"budget"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
+	Description     string    `json:"description,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // Voucher represents a discount voucher within a campaign.
 type Voucher struct {
-	ID            uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID      uuid.UUID `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	CampaignID    uuid.UUID `gorm:"type:uuid;index" json:"campaign_id"`
+	ID            uint64    `gorm:"primaryKey" json:"id"`
+	TenantID      uint64    `gorm:"index;not null" json:"tenant_id"`
+	CampaignID    uint64    `gorm:"index" json:"campaign_id"`
 	Code          string    `gorm:"uniqueIndex;not null" json:"code"`
 	DiscountType  string    `json:"discount_type"`  // fixed, percentage
 	DiscountValue float64   `json:"discount_value"` // 50000, 30000, 20000 (VND)
@@ -49,28 +39,14 @@ type Voucher struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
-func (v *Voucher) BeforeCreate(tx *gorm.DB) error {
-	if v.ID == uuid.Nil {
-		v.ID = uuid.New()
-	}
-	return nil
-}
-
 // VoucherUsage tracks when a voucher is redeemed.
 type VoucherUsage struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID   uuid.UUID `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	VoucherID  uuid.UUID `gorm:"type:uuid;index" json:"voucher_id"`
-	CustomerID uuid.UUID `gorm:"type:uuid;index" json:"customer_id"`
-	TripID     uuid.UUID `gorm:"type:uuid" json:"trip_id"`
+	ID         uint64    `gorm:"primaryKey" json:"id"`
+	TenantID   uint64    `gorm:"index;not null" json:"tenant_id"`
+	VoucherID  uint64    `gorm:"index" json:"voucher_id"`
+	CustomerID uint64    `gorm:"index" json:"customer_id"`
+	TripID     uint64    `json:"trip_id"`
 	UsedAt     time.Time `json:"used_at"`
-}
-
-func (vu *VoucherUsage) BeforeCreate(tx *gorm.DB) error {
-	if vu.ID == uuid.Nil {
-		vu.ID = uuid.New()
-	}
-	return nil
 }
 
 // Policy50_30_20 returns the discount value for a given trip number (CEO requirement).

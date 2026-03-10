@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	ingestionDomain "github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -15,14 +15,14 @@ import (
 
 // CustomerReader defines the specific methods required by CustomerHandler.
 type CustomerReader interface {
-	ListCustomers(ctx context.Context, tenantID uuid.UUID, offset, limit int) ([]domain.Customer, int64, error)
-	GetCustomer(ctx context.Context, tenantID, id uuid.UUID) (*domain.Customer, error)
-	GetLifecycleCounts(ctx context.Context, tenantID uuid.UUID) (map[string]int64, error)
+	ListCustomers(ctx context.Context, tenantID uint64, offset, limit int) ([]domain.Customer, int64, error)
+	GetCustomer(ctx context.Context, tenantID, id uint64) (*domain.Customer, error)
+	GetLifecycleCounts(ctx context.Context, tenantID uint64) (map[string]int64, error)
 }
 
 // EventReader defines the event methods required by CustomerHandler.
 type EventReader interface {
-	ListByCustomerID(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]ingestionDomain.EventLog, int64, error)
+	ListByCustomerID(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]ingestionDomain.EventLog, int64, error)
 }
 
 // CustomerHandler handles HTTP requests for customer management.
@@ -78,7 +78,7 @@ func (h *CustomerHandler) Get(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid customer ID")
 		return
@@ -101,7 +101,7 @@ func (h *CustomerHandler) GetTimeline(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid customer ID")
 		return

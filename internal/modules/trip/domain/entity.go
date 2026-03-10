@@ -2,9 +2,6 @@ package domain
 
 import (
 	"time"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 // TripStatus represents the status of a trip.
@@ -19,9 +16,9 @@ const (
 
 // Trip represents a ride/service request in the CRM.
 type Trip struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
-	TenantID        uuid.UUID  `gorm:"type:uuid;index;not null" json:"tenant_id"`
-	CustomerID      uuid.UUID  `gorm:"type:uuid;index;not null" json:"customer_id"`
+	ID              uint64     `gorm:"primaryKey" json:"id"`
+	TenantID        uint64     `gorm:"index;not null" json:"tenant_id"`
+	CustomerID      uint64     `gorm:"index;not null" json:"customer_id"`
 	ExternalTripID  string     `gorm:"index" json:"external_trip_id,omitempty"`
 	Status          TripStatus `gorm:"default:'booked'" json:"status"`
 	PickupLocation  string     `json:"pickup_location,omitempty"`
@@ -32,17 +29,9 @@ type Trip struct {
 	DropoffLng      float64    `json:"dropoff_lng,omitempty"`
 	Amount          float64    `json:"amount"`
 	DiscountAmount  float64    `json:"discount_amount"`
-	VoucherID       *uuid.UUID `gorm:"type:uuid" json:"voucher_id,omitempty"`
+	VoucherID       *uint64    `json:"voucher_id,omitempty"`
 	CancelReason    string     `json:"cancel_reason,omitempty"`
 	BookedAt        time.Time  `json:"booked_at"`
 	CompletedAt     *time.Time `json:"completed_at,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
-}
-
-// BeforeCreate generates a UUID.
-func (t *Trip) BeforeCreate(tx *gorm.DB) error {
-	if t.ID == uuid.Nil {
-		t.ID = uuid.New()
-	}
-	return nil
 }

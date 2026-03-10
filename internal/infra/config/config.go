@@ -15,6 +15,7 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
+	Driver   string
 	Host     string
 	Port     string
 	User     string
@@ -22,20 +23,30 @@ type DatabaseConfig struct {
 	Name     string
 }
 
-func (d DatabaseConfig) DSN() string {
+func (d DatabaseConfig) PostgresDSN() string {
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Ho_Chi_Minh",
 		d.Host, d.Port, d.User, d.Password, d.Name,
 	)
 }
 
-func Load() (*Config, error) {
-	_ = godotenv.Load()
+func (d DatabaseConfig) MySQLDSN() string {
+	return fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		d.User, d.Password, d.Host, d.Port, d.Name,
+	)
+}
 
+func init() {
+	_ = godotenv.Load()
+}
+
+func Load() (*Config, error) {
 	cfg := &Config{
 		Port:   getEnv("PORT", "8080"),
 		AppEnv: getEnv("APP_ENV", "development"),
 		Database: DatabaseConfig{
+			Driver:   getEnv("DB_DRIVER", "postgres"),
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "postgres"),

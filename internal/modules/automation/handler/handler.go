@@ -2,9 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/automation/domain"
 	"github.com/vothanh/crm-platform/internal/modules/automation/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -38,7 +38,7 @@ type createRuleRequest struct {
 	TriggerConfig   datatypes.JSON `json:"trigger_config"`
 	ActionType      string         `json:"action_type" binding:"required"`
 	ActionConfig    datatypes.JSON `json:"action_config"`
-	TargetSegmentID *uuid.UUID     `json:"target_segment_id"`
+	TargetSegmentID *uint64        `json:"target_segment_id"`
 	ExecutionMode   string         `json:"execution_mode"` // automatic, manual
 }
 
@@ -104,7 +104,7 @@ func (h *AutomationHandler) GetRule(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid rule ID")
 		return
@@ -126,7 +126,7 @@ func (h *AutomationHandler) UpdateRule(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid rule ID")
 		return
@@ -170,7 +170,7 @@ func (h *AutomationHandler) ListLogs(c *gin.Context) {
 		return
 	}
 
-	ruleID, err := uuid.Parse(c.Param("id"))
+	ruleID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid rule ID")
 		return

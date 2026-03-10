@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	customerDomain "github.com/vothanh/crm-platform/internal/modules/customer/domain"
 	ingestionDomain "github.com/vothanh/crm-platform/internal/modules/ingestion/domain"
 	ingestionService "github.com/vothanh/crm-platform/internal/modules/ingestion/service"
@@ -19,7 +18,7 @@ import (
 // CustomerActuator defines the specific customer operations needed by ingestion
 type CustomerActuator interface {
 	UpsertCustomer(ctx context.Context, customer *customerDomain.Customer) (*customerDomain.Customer, error)
-	IncrementTrip(ctx context.Context, tenantID, customerID uuid.UUID, amount float64) (bool, error)
+	IncrementTrip(ctx context.Context, tenantID, customerID uint64, amount float64) (bool, error)
 }
 
 // TripActuator defines the specific trip operations needed by ingestion
@@ -83,7 +82,7 @@ func (h *IngestionHandler) IngestEvent(c *gin.Context) {
 }
 
 // processEvent routes the event to the appropriate module.
-func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uuid.UUID, req *ingestRequest) (interface{}, error) {
+func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uint64, req *ingestRequest) (interface{}, error) {
 	ctx := c.Request.Context()
 	keyType := middleware.GetKeyType(c)
 
@@ -135,7 +134,7 @@ func (h *IngestionHandler) processEvent(c *gin.Context, tenantID uuid.UUID, req 
 }
 
 // ensureCustomer finds or creates a customer from the event.
-func (h *IngestionHandler) ensureCustomer(ctx context.Context, tenantID uuid.UUID, req *ingestRequest) (*customerDomain.Customer, error) {
+func (h *IngestionHandler) ensureCustomer(ctx context.Context, tenantID uint64, req *ingestRequest) (*customerDomain.Customer, error) {
 	customer := &customerDomain.Customer{
 		TenantID:   tenantID,
 		ExternalID: req.ExternalUserID,
@@ -174,7 +173,7 @@ func (h *IngestionHandler) ensureCustomer(ctx context.Context, tenantID uuid.UUI
 	return h.customerOps.UpsertCustomer(ctx, customer)
 }
 
-func (h *IngestionHandler) handleUserEvent(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
+func (h *IngestionHandler) handleUserEvent(ctx context.Context, tenantID uint64, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
 	return map[string]interface{}{
 		"customer_id":     customer.ID,
 		"lifecycle_stage": customer.LifecycleStage,
@@ -182,7 +181,7 @@ func (h *IngestionHandler) handleUserEvent(ctx context.Context, tenantID uuid.UU
 	}, nil
 }
 
-func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
+func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uint64, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
 	var data map[string]interface{}
 	if req.Data != nil {
 		_ = json.Unmarshal(req.Data, &data)
@@ -220,7 +219,7 @@ func (h *IngestionHandler) handleTripBooked(ctx context.Context, tenantID uuid.U
 	}, nil
 }
 
-func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
+func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uint64, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
 	var data map[string]interface{}
 	if req.Data != nil {
 		_ = json.Unmarshal(req.Data, &data)
@@ -264,7 +263,7 @@ func (h *IngestionHandler) handleTripCompleted(ctx context.Context, tenantID uui
 	}, nil
 }
 
-func (h *IngestionHandler) handleTripCancelled(ctx context.Context, tenantID uuid.UUID, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
+func (h *IngestionHandler) handleTripCancelled(ctx context.Context, tenantID uint64, customer *customerDomain.Customer, req *ingestRequest) (interface{}, error) {
 	var data map[string]interface{}
 	if req.Data != nil {
 		_ = json.Unmarshal(req.Data, &data)

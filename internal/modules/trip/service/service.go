@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/trip/domain"
 	"github.com/vothanh/crm-platform/internal/modules/trip/repository"
 	"github.com/vothanh/crm-platform/pkg/apperror"
@@ -57,7 +56,7 @@ func (s *TripService) CreateTrip(ctx context.Context, trip *domain.Trip) (*domai
 }
 
 // GetTrip retrieves a trip by ID.
-func (s *TripService) GetTrip(ctx context.Context, tenantID, id uuid.UUID) (*domain.Trip, error) {
+func (s *TripService) GetTrip(ctx context.Context, tenantID, id uint64) (*domain.Trip, error) {
 	trip, err := s.tripRepo.GetByID(ctx, tenantID, id)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch trip", err)
@@ -69,12 +68,12 @@ func (s *TripService) GetTrip(ctx context.Context, tenantID, id uuid.UUID) (*dom
 }
 
 // ListByCustomer returns trips for a specific customer.
-func (s *TripService) ListByCustomer(ctx context.Context, tenantID, customerID uuid.UUID, offset, limit int) ([]domain.Trip, int64, error) {
+func (s *TripService) ListByCustomer(ctx context.Context, tenantID, customerID uint64, offset, limit int) ([]domain.Trip, int64, error) {
 	return s.tripRepo.ListByCustomerID(ctx, tenantID, customerID, offset, limit)
 }
 
 // CompleteTrip marks a trip as completed.
-func (s *TripService) CompleteTrip(ctx context.Context, tenantID, tripID uuid.UUID, amount float64) (*domain.Trip, error) {
+func (s *TripService) CompleteTrip(ctx context.Context, tenantID, tripID uint64, amount float64) (*domain.Trip, error) {
 	trip, err := s.tripRepo.GetByID(ctx, tenantID, tripID)
 	if err != nil {
 		return nil, apperror.Wrap("DB_ERROR", "failed to fetch trip", err)

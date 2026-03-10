@@ -3,10 +3,10 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/vothanh/crm-platform/internal/modules/campaign/domain"
 	"github.com/vothanh/crm-platform/internal/modules/campaign/service"
 	"github.com/vothanh/crm-platform/internal/shared/middleware"
@@ -35,13 +35,13 @@ func (h *CampaignHandler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 type createCampaignRequest struct {
-	Name            string     `json:"name" binding:"required"`
-	Type            string     `json:"type" binding:"required"`
-	TargetSegmentID *uuid.UUID `json:"target_segment_id"`
-	Budget          float64    `json:"budget"`
-	StartDate       string     `json:"start_date" binding:"required"`
-	EndDate         string     `json:"end_date" binding:"required"`
-	Description     string     `json:"description"`
+	Name            string  `json:"name" binding:"required"`
+	Type            string  `json:"type" binding:"required"`
+	TargetSegmentID *uint64 `json:"target_segment_id"`
+	Budget          float64 `json:"budget"`
+	StartDate       string  `json:"start_date" binding:"required"`
+	EndDate         string  `json:"end_date" binding:"required"`
+	Description     string  `json:"description"`
 }
 
 func (h *CampaignHandler) Create(c *gin.Context) {
@@ -107,7 +107,7 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 		return
 	}
 
-	id, err := uuid.Parse(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid campaign ID")
 		return
@@ -123,8 +123,8 @@ func (h *CampaignHandler) Get(c *gin.Context) {
 }
 
 type generateVoucherRequest struct {
-	CustomerID uuid.UUID `json:"customer_id" binding:"required"`
-	TripNumber int       `json:"trip_number" binding:"required,min=1,max=3"`
+	CustomerID uint64 `json:"customer_id" binding:"required"`
+	TripNumber int    `json:"trip_number" binding:"required,min=1,max=3"`
 }
 
 func (h *CampaignHandler) GenerateVoucher(c *gin.Context) {
@@ -134,7 +134,7 @@ func (h *CampaignHandler) GenerateVoucher(c *gin.Context) {
 		return
 	}
 
-	campaignID, err := uuid.Parse(c.Param("id"))
+	campaignID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid campaign ID")
 		return
@@ -162,7 +162,7 @@ func (h *CampaignHandler) ListVouchers(c *gin.Context) {
 		return
 	}
 
-	campaignID, err := uuid.Parse(c.Param("id"))
+	campaignID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		response.BadRequest(c, "invalid campaign ID")
 		return
@@ -178,9 +178,9 @@ func (h *CampaignHandler) ListVouchers(c *gin.Context) {
 }
 
 type redeemVoucherRequest struct {
-	Code       string    `json:"code" binding:"required"`
-	CustomerID uuid.UUID `json:"customer_id" binding:"required"`
-	TripID     uuid.UUID `json:"trip_id" binding:"required"`
+	Code       string `json:"code" binding:"required"`
+	CustomerID uint64 `json:"customer_id" binding:"required"`
+	TripID     uint64 `json:"trip_id" binding:"required"`
 }
 
 func (h *CampaignHandler) RedeemVoucher(c *gin.Context) {
