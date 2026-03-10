@@ -1,4 +1,50 @@
-.agents
-.DS_Store
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.cov
+
+# Dependency directories (remove the comment below if you use Go modules)
+/vendor/
+
+# Go workspace file
+*.code-workspace
+
+# IDE/editor directories and files
+.idea/
+.vscode/
+.agents/
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Local env files
 .env
+
+# Logs
+*.log
+
+# Build output and pid files
+bin/
+pid/
+
+# Private keys and certs 
+*.pem
+*.key
+*.crt
+*.cert
+keys/firebase-service-account.json
+deploy/deploy.sh
+
+# Go module files
+go.sum
+go.work
+go.work.sum
